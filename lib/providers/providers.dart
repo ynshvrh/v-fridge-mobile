@@ -16,6 +16,7 @@ final apiClientProvider = Provider<ApiClient>((ref) => ApiClient(_defaultApiUrl)
 
 final authServiceProvider = Provider<AuthService>((ref) => AuthService(ref.watch(apiClientProvider)));
 final productsServiceProvider = Provider<ProductsService>((ref) => ProductsService(ref.watch(apiClientProvider)));
+final analyticsServiceProvider = Provider<AnalyticsService>((ref) => AnalyticsService(ref.watch(apiClientProvider)));
 final chatServiceProvider = Provider<ChatService>((ref) => ChatService(ref.watch(apiClientProvider)));
 final shoppingServiceProvider = Provider<ShoppingService>((ref) => ShoppingService(ref.watch(apiClientProvider)));
 final plannerServiceProvider = Provider<PlannerService>((ref) => PlannerService(ref.watch(apiClientProvider)));

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../models/api_models.dart';
 import '../../providers/providers.dart';
+import 'barcode_scanner.dart';
 
 class AddProductSheet extends ConsumerStatefulWidget {
   const AddProductSheet({super.key});
@@ -28,6 +29,22 @@ class _AddProductSheetState extends ConsumerState<AddProductSheet> {
     _name.dispose();
     _quantity.dispose();
     super.dispose();
+  }
+
+  Future<void> _scanBarcode() async {
+    final scanned = await Navigator.of(context).push<ScannedProduct>(
+      MaterialPageRoute(builder: (_) => const BarcodeScannerScreen()),
+    );
+    if (scanned == null) return;
+    setState(() {
+      _name.text = scanned.name;
+      _quantity.text = scanned.quantity;
+      _unit = ['pcs', 'kg', 'g', 'l', 'ml'].contains(scanned.unit) ? scanned.unit : 'pcs';
+      _category = Categories.slugs.contains(scanned.category) ? scanned.category : 'other';
+    });
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Filled from barcode ${scanned.barcode}')));
+    }
   }
 
   Future<void> _pickDate() async {
@@ -88,6 +105,12 @@ class _AddProductSheetState extends ConsumerState<AddProductSheet> {
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
                 ),
+              OutlinedButton.icon(
+                onPressed: _saving ? null : _scanBarcode,
+                icon: const Icon(Icons.qr_code_scanner),
+                label: const Text('Scan barcode'),
+              ),
+              const SizedBox(height: 12),
               TextField(controller: _name, decoration: const InputDecoration(labelText: 'Name')),
               const SizedBox(height: 12),
               Row(

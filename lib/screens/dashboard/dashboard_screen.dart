@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../models/api_models.dart';
 import '../../providers/providers.dart';
 import 'add_product_sheet.dart';
+import 'analytics_tile.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -84,15 +85,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             final products = snap.data ?? [];
             if (products.isEmpty) return _EmptyView(onAdd: _add);
 
-            return ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: products.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (_, i) => _ProductTile(
-                product: products[i],
-                onDelete: () => _delete(products[i]),
-                onConsume: () => _consume(products[i]),
-              ),
+            return ListView.builder(
+              padding: const EdgeInsets.only(top: 8, bottom: 80),
+              itemCount: products.length + 1,
+              itemBuilder: (_, i) {
+                if (i == 0) return const AnalyticsTile();
+                final p = products[i - 1];
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+                  child: _ProductTile(
+                    product: p,
+                    onDelete: () => _delete(p),
+                    onConsume: () => _consume(p),
+                  ),
+                );
+              },
             );
           },
         ),

@@ -101,6 +101,22 @@ class ProductsService {
       });
 
   Future<void> delete(int id) => _api.delete('/products/$id');
+
+  /// Bulk-deletes every product in the active fridge. Each row writes a consumption_log entry.
+  Future<int> deleteAll() async {
+    final data = await _api.delete<Map<String, dynamic>>('/products');
+    return (data['deleted'] as int?) ?? 0;
+  }
+}
+
+class AnalyticsService {
+  AnalyticsService(this._api);
+  final ApiClient _api;
+
+  Future<AnalyticsSummary> summary() async {
+    final data = await _api.get<Map<String, dynamic>>('/analytics');
+    return AnalyticsSummary.fromJson(data);
+  }
 }
 
 class ChatService {

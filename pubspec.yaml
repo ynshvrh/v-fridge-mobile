@@ -22,8 +22,17 @@ dependencies:
   # Secure token storage (Android Keystore / iOS Keychain)
   flutter_secure_storage: ^9.2.2
 
+  # Non-secret local preferences (theme mode)
+  shared_preferences: ^2.3.4
+
   # Date formatting
   intl: ^0.19.0
+
+  # Google sign-in (ID-token flow, no Firebase needed)
+  google_sign_in: ^6.2.2
+
+  # Barcode scanner (camera + ML-Kit on Android, AVFoundation on iOS)
+  mobile_scanner: ^5.2.3
 
 dev_dependencies:
   flutter_test:

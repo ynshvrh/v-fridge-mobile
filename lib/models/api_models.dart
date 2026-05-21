@@ -225,6 +225,74 @@ class Fridge {
       );
 }
 
+class AnalyticsSummary {
+  final List<AnalyticsLeader> mostWasted;
+  final List<FastestConsumed> fastestConsumed;
+  final List<WeeklyTrend> weeklyTrends;
+
+  AnalyticsSummary({required this.mostWasted, required this.fastestConsumed, required this.weeklyTrends});
+
+  factory AnalyticsSummary.fromJson(Map<String, dynamic> j) => AnalyticsSummary(
+        mostWasted: ((j['mostWasted'] ?? []) as List)
+            .map((x) => AnalyticsLeader.fromJson(x as Map<String, dynamic>))
+            .toList(),
+        fastestConsumed: ((j['fastestConsumed'] ?? []) as List)
+            .map((x) => FastestConsumed.fromJson(x as Map<String, dynamic>))
+            .toList(),
+        weeklyTrends: ((j['weeklyTrends'] ?? []) as List)
+            .map((x) => WeeklyTrend.fromJson(x as Map<String, dynamic>))
+            .toList(),
+      );
+
+  bool get isEmpty => mostWasted.isEmpty && fastestConsumed.isEmpty && weeklyTrends.isEmpty;
+}
+
+class AnalyticsLeader {
+  final String productName;
+  final double totalQuantity;
+  final int occurrences;
+  final String category;
+
+  AnalyticsLeader({required this.productName, required this.totalQuantity, required this.occurrences, required this.category});
+
+  factory AnalyticsLeader.fromJson(Map<String, dynamic> j) => AnalyticsLeader(
+        productName: j['productName'] as String,
+        totalQuantity: (j['totalQuantity'] as num).toDouble(),
+        occurrences: j['occurrences'] as int,
+        category: j['category'] as String? ?? 'other',
+      );
+}
+
+class FastestConsumed {
+  final String productName;
+  final String category;
+  final int ageDays;
+
+  FastestConsumed({required this.productName, required this.category, required this.ageDays});
+
+  factory FastestConsumed.fromJson(Map<String, dynamic> j) => FastestConsumed(
+        productName: j['productName'] as String,
+        category: j['category'] as String? ?? 'other',
+        ageDays: j['ageDays'] as int,
+      );
+}
+
+class WeeklyTrend {
+  final String weekStart;
+  final int consumed;
+  final int wasted;
+  final int expired;
+
+  WeeklyTrend({required this.weekStart, required this.consumed, required this.wasted, required this.expired});
+
+  factory WeeklyTrend.fromJson(Map<String, dynamic> j) => WeeklyTrend(
+        weekStart: j['weekStart'] as String,
+        consumed: (j['consumed'] as int?) ?? 0,
+        wasted: (j['wasted'] as int?) ?? 0,
+        expired: (j['expired'] as int?) ?? 0,
+      );
+}
+
 /// Slug → English label catalog. Mirrors src/VFridge.Api/Contracts/ProductCategories.cs.
 class Categories {
   static const slugs = [

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/api_models.dart';
 import '../../providers/providers.dart';
+import 'google_signin_button.dart';
 
 class SignInScreen extends ConsumerStatefulWidget {
   const SignInScreen({super.key});
@@ -71,6 +72,14 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                   const SizedBox(height: 12),
                   Text('Welcome back', textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall),
                   const SizedBox(height: 24),
+                  const GoogleSignInButton(),
+                  const SizedBox(height: 16),
+                  Row(children: [
+                    const Expanded(child: Divider()),
+                    Padding(padding: const EdgeInsets.symmetric(horizontal: 12), child: Text('or', style: Theme.of(context).textTheme.labelSmall)),
+                    const Expanded(child: Divider()),
+                  ]),
+                  const SizedBox(height: 16),
                   if (_error != null)
                     Container(
                       padding: const EdgeInsets.all(12),
