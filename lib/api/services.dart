@@ -94,11 +94,36 @@ class ProductsService {
     return Product.fromJson(data);
   }
 
-  Future<void> patch(int id, {double? quantity, String? category}) =>
-      _api.patch('/products/$id', body: {
-        if (quantity != null) 'quantity': quantity,
-        if (category != null) 'category': category,
-      });
+  /// Patches the supplied fields. Use `clearExpiry: true` to send a null expiry date
+   /// (which deletes the existing value); leaving both `expiryDate` and `clearExpiry`
+   /// at default keeps whatever is currently stored.
+  Future<Product> patch(int id, {
+    String? name,
+    String? description,
+    double? quantity,
+    String? unit,
+    DateTime? expiryDate,
+    bool clearExpiry = false,
+    String? category,
+  }) async {
+    final body = <String, dynamic>{
+      if (name != null) 'name': name,
+      if (description != null) 'description': description,
+      if (quantity != null) 'quantity': quantity,
+      if (unit != null) 'unit': unit,
+      if (expiryDate != null) 'expiryDate': formatDate(expiryDate),
+      if (clearExpiry && expiryDate == null) 'expiryDate': null,
+      if (category != null) 'category': category,
+    };
+    final data = await _api.patch<Map<String, dynamic>>('/products/$id', body: body);
+    // The PATCH endpoint returns the updated product on a normal edit, OR `{success: true,
+    // removed: true}` when quantity drops to zero (the row is deleted + logged). The caller
+    // is responsible for handling the removed case.
+    if (data['removed'] == true) {
+      return Product(id: id, name: name ?? '', quantity: 0, unit: unit ?? '', category: category ?? 'other', ownerId: 0);
+    }
+    return Product.fromJson(data);
+  }
 
   Future<void> delete(int id) => _api.delete('/products/$id');
 

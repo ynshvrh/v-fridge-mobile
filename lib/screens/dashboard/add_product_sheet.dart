@@ -6,23 +6,45 @@ import '../../models/api_models.dart';
 import '../../providers/providers.dart';
 import 'barcode_scanner.dart';
 
+/// Reused for both 'Add new product' and 'Edit product X' — pass `existing` to enter edit mode.
 class AddProductSheet extends ConsumerStatefulWidget {
-  const AddProductSheet({super.key});
+  const AddProductSheet({super.key, this.existing});
+
+  final Product? existing;
+
+  bool get isEdit => existing != null;
 
   @override
   ConsumerState<AddProductSheet> createState() => _AddProductSheetState();
 }
 
 class _AddProductSheetState extends ConsumerState<AddProductSheet> {
-  final _name = TextEditingController();
-  final _quantity = TextEditingController(text: '1');
-  String _unit = 'pcs';
-  String _category = 'other';
+  late final TextEditingController _name;
+  late final TextEditingController _quantity;
+  late String _unit;
+  late String _category;
   DateTime? _expiry;
+  bool _expiryChanged = false;
   bool _saving = false;
   String? _error;
 
   static const _units = ['pcs', 'kg', 'g', 'l', 'ml'];
+
+  @override
+  void initState() {
+    super.initState();
+    final p = widget.existing;
+    _name = TextEditingController(text: p?.name ?? '');
+    final initialQty = p == null
+        ? '1'
+        : p.quantity % 1 == 0
+            ? p.quantity.toStringAsFixed(0)
+            : p.quantity.toString();
+    _quantity = TextEditingController(text: initialQty);
+    _unit = _units.contains(p?.unit) ? p!.unit : 'pcs';
+    _category = Categories.slugs.contains(p?.category) ? p!.category : 'other';
+    _expiry = p?.expiryDate;
+  }
 
   @override
   void dispose() {
@@ -39,7 +61,7 @@ class _AddProductSheetState extends ConsumerState<AddProductSheet> {
     setState(() {
       _name.text = scanned.name;
       _quantity.text = scanned.quantity;
-      _unit = ['pcs', 'kg', 'g', 'l', 'ml'].contains(scanned.unit) ? scanned.unit : 'pcs';
+      _unit = _units.contains(scanned.unit) ? scanned.unit : 'pcs';
       _category = Categories.slugs.contains(scanned.category) ? scanned.category : 'other';
     });
     if (mounted) {
@@ -54,7 +76,7 @@ class _AddProductSheetState extends ConsumerState<AddProductSheet> {
       lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
       initialDate: _expiry ?? DateTime.now().add(const Duration(days: 7)),
     );
-    if (picked != null) setState(() => _expiry = picked);
+    if (picked != null) setState(() { _expiry = picked; _expiryChanged = true; });
   }
 
   Future<void> _save() async {
@@ -69,14 +91,30 @@ class _AddProductSheetState extends ConsumerState<AddProductSheet> {
     }
     setState(() { _saving = true; _error = null; });
     try {
-      final created = await ref.read(productsServiceProvider).create(
-            name: _name.text.trim(),
-            quantity: qty,
-            unit: _unit,
-            expiryDate: _expiry,
-            category: _category,
-          );
-      if (mounted) Navigator.pop(context, created);
+      final svc = ref.read(productsServiceProvider);
+      final Product saved;
+      if (widget.isEdit) {
+        // Only send fields that actually changed compared to the loaded product.
+        final old = widget.existing!;
+        saved = await svc.patch(
+          old.id,
+          name: _name.text.trim() != old.name ? _name.text.trim() : null,
+          quantity: qty != old.quantity ? qty : null,
+          unit: _unit != old.unit ? _unit : null,
+          category: _category != old.category ? _category : null,
+          expiryDate: _expiryChanged ? _expiry : null,
+          clearExpiry: _expiryChanged && _expiry == null,
+        );
+      } else {
+        saved = await svc.create(
+          name: _name.text.trim(),
+          quantity: qty,
+          unit: _unit,
+          expiryDate: _expiry,
+          category: _category,
+        );
+      }
+      if (mounted) Navigator.pop(context, saved);
     } on ApiError catch (e) {
       setState(() => _error = e.message);
     } finally {
@@ -87,6 +125,8 @@ class _AddProductSheetState extends ConsumerState<AddProductSheet> {
   @override
   Widget build(BuildContext context) {
     final inset = MediaQuery.of(context).viewInsets.bottom;
+    final title = widget.isEdit ? 'Edit product' : 'Add product';
+    final actionLabel = widget.isEdit ? 'Save' : 'Add to fridge';
     return Padding(
       padding: EdgeInsets.only(bottom: inset),
       child: SafeArea(
@@ -98,19 +138,21 @@ class _AddProductSheetState extends ConsumerState<AddProductSheet> {
             children: [
               Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Theme.of(context).colorScheme.outlineVariant, borderRadius: BorderRadius.circular(2)))),
               const SizedBox(height: 16),
-              Text('Add product', style: Theme.of(context).textTheme.titleLarge),
+              Text(title, style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 16),
               if (_error != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
                 ),
-              OutlinedButton.icon(
-                onPressed: _saving ? null : _scanBarcode,
-                icon: const Icon(Icons.qr_code_scanner),
-                label: const Text('Scan barcode'),
-              ),
-              const SizedBox(height: 12),
+              if (!widget.isEdit) ...[
+                OutlinedButton.icon(
+                  onPressed: _saving ? null : _scanBarcode,
+                  icon: const Icon(Icons.qr_code_scanner),
+                  label: const Text('Scan barcode'),
+                ),
+                const SizedBox(height: 12),
+              ],
               TextField(controller: _name, decoration: const InputDecoration(labelText: 'Name')),
               const SizedBox(height: 12),
               Row(
@@ -152,7 +194,7 @@ class _AddProductSheetState extends ConsumerState<AddProductSheet> {
                     Text(_expiry == null ? 'No date' : DateFormat('MMMM d, yyyy').format(_expiry!)),
                     Row(children: [
                       if (_expiry != null)
-                        IconButton(onPressed: () => setState(() => _expiry = null), icon: const Icon(Icons.close)),
+                        IconButton(onPressed: () => setState(() { _expiry = null; _expiryChanged = true; }), icon: const Icon(Icons.close)),
                       IconButton(onPressed: _pickDate, icon: const Icon(Icons.calendar_today_outlined)),
                     ]),
                   ],
@@ -163,7 +205,7 @@ class _AddProductSheetState extends ConsumerState<AddProductSheet> {
                 onPressed: _saving ? null : _save,
                 child: _saving
                     ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Text('Add to fridge'),
+                    : Text(actionLabel),
               ),
             ],
           ),

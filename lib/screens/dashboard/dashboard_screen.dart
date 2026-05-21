@@ -36,6 +36,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (created != null) _reload();
   }
 
+  Future<void> _edit(Product p) async {
+    final updated = await showModalBottomSheet<Product>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => AddProductSheet(existing: p),
+    );
+    if (updated != null) _reload();
+  }
+
   Future<void> _delete(Product p) async {
     final ok = await showDialog<bool>(
       context: context,
@@ -59,7 +68,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Future<void> _consume(Product p) async {
     try {
       await ref.read(productsServiceProvider).patch(p.id, quantity: 0);
-      _reload();
+      if (mounted) _reload();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('"${p.name}" finished — logged')));
       }
@@ -95,6 +104,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
                   child: _ProductTile(
                     product: p,
+                    onTap: () => _edit(p),
+                    onEdit: () => _edit(p),
                     onDelete: () => _delete(p),
                     onConsume: () => _consume(p),
                   ),
@@ -114,8 +125,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 }
 
 class _ProductTile extends StatelessWidget {
-  const _ProductTile({required this.product, required this.onDelete, required this.onConsume});
+  const _ProductTile({
+    required this.product,
+    required this.onTap,
+    required this.onEdit,
+    required this.onDelete,
+    required this.onConsume,
+  });
   final Product product;
+  final VoidCallback onTap;
+  final VoidCallback onEdit;
   final VoidCallback onDelete;
   final VoidCallback onConsume;
 
@@ -124,6 +143,7 @@ class _ProductTile extends StatelessWidget {
     final freshness = _freshness(product.expiryDate);
     return Card(
       child: ListTile(
+        onTap: onTap,
         title: Text(product.name, style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -141,10 +161,12 @@ class _ProductTile extends StatelessWidget {
         ),
         trailing: PopupMenuButton<String>(
           onSelected: (v) {
+            if (v == 'edit') onEdit();
             if (v == 'delete') onDelete();
             if (v == 'consume') onConsume();
           },
           itemBuilder: (_) => const [
+            PopupMenuItem(value: 'edit', child: ListTile(leading: Icon(Icons.edit_outlined), title: Text('Edit'))),
             PopupMenuItem(value: 'consume', child: ListTile(leading: Icon(Icons.check_circle_outline), title: Text('Mark finished'))),
             PopupMenuItem(value: 'delete', child: ListTile(leading: Icon(Icons.delete_outline), title: Text('Delete'))),
           ],
