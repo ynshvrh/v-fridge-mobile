@@ -37,6 +37,27 @@ jobs:
 
       - run: flutter pub get
 
+      - name: Materialize release keystore from secrets
+        # Stable signing across CI runs is required for Google Sign-In: the SHA-1 fingerprint of the
+        # APK signing cert must match the Android OAuth client registered in Google Cloud Console.
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "ANDROID_KEYSTORE_BASE64 secret is not set — release builds will not be signed with the release key." >&2
+            exit 1
+          fi
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/v-fridge-release.jks
+          cat > android/key.properties <<EOF
+          storeFile=v-fridge-release.jks
+          storePassword=$ANDROID_KEYSTORE_PASSWORD
+          keyAlias=$ANDROID_KEY_ALIAS
+          keyPassword=$ANDROID_KEY_PASSWORD
+          EOF
+
       - name: Build release APK
         # API_URL is public (Render service) so it's safe to bake into the binary.
         # GOOGLE_CLIENT_ID stays at its compiled-in default — same value as Google__ClientId in API env.
@@ -71,8 +92,8 @@ jobs:
             2. Open it (you may need to allow "Install from unknown sources" once).
             3. Sign in with email or Google.
 
-            The APK is signed with a debug certificate — fine for sideloading on your own device,
-            but Play Store / Apple-TestFlight equivalents would need a release keystore.
+            The APK is signed with the stable V-Fridge release keystore — SHA-1 stays constant
+            across releases, so Google Sign-In keeps working after upgrades.
 
       # When manually triggered without a tag, just upload the APK as a workflow artifact
       # so it can be downloaded from the Actions run page.
