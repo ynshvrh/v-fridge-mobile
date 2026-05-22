@@ -50,13 +50,21 @@ jobs:
             echo "ANDROID_KEYSTORE_BASE64 secret is not set — release builds will not be signed with the release key." >&2
             exit 1
           fi
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/v-fridge-release.jks
-          cat > android/key.properties <<EOF
-          storeFile=v-fridge-release.jks
-          storePassword=$ANDROID_KEYSTORE_PASSWORD
-          keyAlias=$ANDROID_KEY_ALIAS
-          keyPassword=$ANDROID_KEY_PASSWORD
-          EOF
+          # Strip any stray whitespace/newlines the secret values may have picked up at paste-time.
+          STORE_PASS=$(printf %s "$ANDROID_KEYSTORE_PASSWORD" | tr -d '[:space:]')
+          KEY_PASS=$(printf %s "$ANDROID_KEY_PASSWORD" | tr -d '[:space:]')
+          KEY_ALIAS=$(printf %s "$ANDROID_KEY_ALIAS" | tr -d '[:space:]')
+          echo "Secret lengths after trim: store=${#STORE_PASS} key=${#KEY_PASS} alias=${#KEY_ALIAS}"
+          printf %s "$ANDROID_KEYSTORE_BASE64" | tr -d '[:space:]' | base64 -d > android/app/v-fridge-release.jks
+          echo "Keystore decoded: $(stat -c %s android/app/v-fridge-release.jks) bytes"
+          # Verify the password by opening the keystore with keytool before letting Gradle try.
+          keytool -list -keystore android/app/v-fridge-release.jks -storepass "$STORE_PASS" -alias "$KEY_ALIAS" > /dev/null
+          {
+            echo "storeFile=v-fridge-release.jks"
+            echo "storePassword=$STORE_PASS"
+            echo "keyAlias=$KEY_ALIAS"
+            echo "keyPassword=$KEY_PASS"
+          } > android/key.properties
 
       - name: Build release APK
         # API_URL is public (Render service) so it's safe to bake into the binary.
