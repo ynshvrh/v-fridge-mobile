@@ -1,0 +1,84 @@
+name: Release
+
+# Fires when a vX.Y.Z tag is pushed. Manual trigger via the Actions UI is also wired up
+# for emergency re-runs (uses the latest commit on main).
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version label for the release (e.g. v1.0.0). Used in the APK filename and release title.'
+        required: true
+        default: 'v0.0.0-manual'
+
+permissions:
+  contents: write   # softprops/action-gh-release needs this to create the Release
+
+jobs:
+  build:
+    name: build APK + publish
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.41.8'
+          cache: true
+
+      - run: flutter pub get
+
+      - name: Build release APK
+        # API_URL is public (Render service) so it's safe to bake into the binary.
+        # GOOGLE_CLIENT_ID stays at its compiled-in default — same value as Google__ClientId in API env.
+        run: |
+          flutter build apk --release \
+            --dart-define=API_URL=https://v-fridge-api.onrender.com
+
+      - name: Rename APK with the version label
+        id: rename
+        run: |
+          VERSION="${{ github.ref_name }}"
+          if [ -z "$VERSION" ] || [ "$VERSION" = "main" ]; then
+            VERSION="${{ inputs.version }}"
+          fi
+          OUTPUT="V-Fridge-${VERSION}.apk"
+          cp build/app/outputs/flutter-apk/app-release.apk "$OUTPUT"
+          echo "apk_path=$OUTPUT" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.rename.outputs.apk_path }}
+          name: V-Fridge ${{ steps.rename.outputs.version }}
+          generate_release_notes: true
+          body: |
+            Sideload-friendly Android APK for V-Fridge. Talks to https://v-fridge-api.onrender.com.
+
+            **Install:**
+            1. Download the `.apk` below on your phone.
+            2. Open it (you may need to allow "Install from unknown sources" once).
+            3. Sign in with email or Google.
+
+            The APK is signed with a debug certificate — fine for sideloading on your own device,
+            but Play Store / Apple-TestFlight equivalents would need a release keystore.
+
+      # When manually triggered without a tag, just upload the APK as a workflow artifact
+      # so it can be downloaded from the Actions run page.
+      - name: Upload as workflow artifact (manual run)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.rename.outputs.apk_path }}
+          path: ${{ steps.rename.outputs.apk_path }}
