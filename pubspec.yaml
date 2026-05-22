@@ -40,5 +40,22 @@ dev_dependencies:
 
   flutter_lints: ^6.0.0
 
+  # Generates Android mipmaps, iOS AppIcon.appiconset, and web icons from one PNG.
+  # Run with: dart run flutter_launcher_icons
+  flutter_launcher_icons: ^0.14.2
+
+flutter_launcher_icons:
+  android: "ic_launcher"
+  ios: true
+  image_path: "assets/icon-1024.png"
+  # Adaptive icon for Android 8.0+: foreground is the icon, background is the celadon backdrop.
+  adaptive_icon_background: "#B5C9A1"
+  adaptive_icon_foreground: "assets/icon-1024.png"
+  web:
+    generate: true
+    image_path: "assets/icon-1024.png"
+    background_color: "#B5C9A1"
+    theme_color: "#8C5383"
+
 flutter:
   uses-material-design: true
