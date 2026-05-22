@@ -83,7 +83,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                         if (_error != null) const SizedBox(height: 16),
                         TextField(
                           controller: _username,
-                          decoration: const InputDecoration(labelText: 'Username'),
+                          decoration: const InputDecoration(
+                            labelText: 'Display name (optional)',
+                            hintText: 'Leave empty to use your email prefix',
+                          ),
                           enabled: !_loading,
                         ),
                         const SizedBox(height: 12),
