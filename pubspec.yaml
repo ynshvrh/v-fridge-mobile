@@ -2,7 +2,7 @@ name: v_fridge
 description: "V-Fridge mobile client — Flutter app for the v-fridge-api backend."
 publish_to: 'none'
 
-version: 1.2.0+3
+version: 1.3.0+4
 
 environment:
   sdk: ^3.11.5
