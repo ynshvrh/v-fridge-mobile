@@ -362,6 +362,49 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsLanguageUkrainian => 'Українська';
 
   @override
+  String get settingsCuisine => 'Cuisine';
+
+  @override
+  String get settingsCuisineHint =>
+      'What the chef leans toward when suggesting recipes.';
+
+  @override
+  String get cuisineAny => 'No preference';
+
+  @override
+  String get cuisineUkrainian => 'Ukrainian';
+
+  @override
+  String get cuisineGeorgian => 'Georgian';
+
+  @override
+  String get cuisineItalian => 'Italian';
+
+  @override
+  String get cuisineFrench => 'French';
+
+  @override
+  String get cuisineMexican => 'Mexican';
+
+  @override
+  String get cuisineMiddleEastern => 'Middle Eastern';
+
+  @override
+  String get cuisineIndian => 'Indian';
+
+  @override
+  String get cuisineChinese => 'Chinese';
+
+  @override
+  String get cuisineJapanese => 'Japanese';
+
+  @override
+  String get cuisineThai => 'Thai';
+
+  @override
+  String get cuisineAmerican => 'American';
+
+  @override
   String get settingsEmailVerified => 'Email verified';
 
   @override

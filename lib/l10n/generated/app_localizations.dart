@@ -734,6 +734,90 @@ abstract class AppLocalizations {
   /// **'Українська'**
   String get settingsLanguageUkrainian;
 
+  /// No description provided for @settingsCuisine.
+  ///
+  /// In en, this message translates to:
+  /// **'Cuisine'**
+  String get settingsCuisine;
+
+  /// No description provided for @settingsCuisineHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What the chef leans toward when suggesting recipes.'**
+  String get settingsCuisineHint;
+
+  /// No description provided for @cuisineAny.
+  ///
+  /// In en, this message translates to:
+  /// **'No preference'**
+  String get cuisineAny;
+
+  /// No description provided for @cuisineUkrainian.
+  ///
+  /// In en, this message translates to:
+  /// **'Ukrainian'**
+  String get cuisineUkrainian;
+
+  /// No description provided for @cuisineGeorgian.
+  ///
+  /// In en, this message translates to:
+  /// **'Georgian'**
+  String get cuisineGeorgian;
+
+  /// No description provided for @cuisineItalian.
+  ///
+  /// In en, this message translates to:
+  /// **'Italian'**
+  String get cuisineItalian;
+
+  /// No description provided for @cuisineFrench.
+  ///
+  /// In en, this message translates to:
+  /// **'French'**
+  String get cuisineFrench;
+
+  /// No description provided for @cuisineMexican.
+  ///
+  /// In en, this message translates to:
+  /// **'Mexican'**
+  String get cuisineMexican;
+
+  /// No description provided for @cuisineMiddleEastern.
+  ///
+  /// In en, this message translates to:
+  /// **'Middle Eastern'**
+  String get cuisineMiddleEastern;
+
+  /// No description provided for @cuisineIndian.
+  ///
+  /// In en, this message translates to:
+  /// **'Indian'**
+  String get cuisineIndian;
+
+  /// No description provided for @cuisineChinese.
+  ///
+  /// In en, this message translates to:
+  /// **'Chinese'**
+  String get cuisineChinese;
+
+  /// No description provided for @cuisineJapanese.
+  ///
+  /// In en, this message translates to:
+  /// **'Japanese'**
+  String get cuisineJapanese;
+
+  /// No description provided for @cuisineThai.
+  ///
+  /// In en, this message translates to:
+  /// **'Thai'**
+  String get cuisineThai;
+
+  /// No description provided for @cuisineAmerican.
+  ///
+  /// In en, this message translates to:
+  /// **'American'**
+  String get cuisineAmerican;
+
   /// No description provided for @settingsEmailVerified.
   ///
   /// In en, this message translates to:

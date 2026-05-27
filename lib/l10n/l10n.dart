@@ -50,6 +50,37 @@ String categoryLabel(AppLocalizations l10n, String slug) {
   }
 }
 
+/// Resolves a localized cuisine label for a slug. Falls back to the "no preference"
+/// label when the slug is unknown.
+String cuisineLabel(AppLocalizations l10n, String slug) {
+  switch (slug) {
+    case 'ukrainian':
+      return l10n.cuisineUkrainian;
+    case 'georgian':
+      return l10n.cuisineGeorgian;
+    case 'italian':
+      return l10n.cuisineItalian;
+    case 'french':
+      return l10n.cuisineFrench;
+    case 'mexican':
+      return l10n.cuisineMexican;
+    case 'middle-eastern':
+      return l10n.cuisineMiddleEastern;
+    case 'indian':
+      return l10n.cuisineIndian;
+    case 'chinese':
+      return l10n.cuisineChinese;
+    case 'japanese':
+      return l10n.cuisineJapanese;
+    case 'thai':
+      return l10n.cuisineThai;
+    case 'american':
+      return l10n.cuisineAmerican;
+    default:
+      return l10n.cuisineAny;
+  }
+}
+
 /// Resolves a localized day name. Input is the canonical English day name
 /// returned by the backend (e.g. `"Monday"`).
 String plannerDayLabel(AppLocalizations l10n, String day) {

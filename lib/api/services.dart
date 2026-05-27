@@ -10,6 +10,7 @@ class AuthService {
     String email,
     String password, {
     String? preferredLanguage,
+    String? cuisinePreference,
   }) async {
     final data = await _api.post<Map<String, dynamic>>(
       '/auth/signup',
@@ -18,16 +19,24 @@ class AuthService {
         'email': email,
         'password': password,
         if (preferredLanguage != null) 'preferredLanguage': preferredLanguage,
+        if (cuisinePreference != null) 'cuisinePreference': cuisinePreference,
       },
       skipAuth: true,
     );
     return UserSummary.fromJson(data['user'] as Map<String, dynamic>);
   }
 
-  Future<UserSummary> updatePreferences({required String preferredLanguage}) async {
+  /// Partial update for /auth/me/preferences. Pass only the fields the caller wants to change.
+  Future<UserSummary> updatePreferences({
+    String? preferredLanguage,
+    String? cuisinePreference,
+  }) async {
     final data = await _api.patch<Map<String, dynamic>>(
       '/auth/me/preferences',
-      body: {'preferredLanguage': preferredLanguage},
+      body: {
+        if (preferredLanguage != null) 'preferredLanguage': preferredLanguage,
+        if (cuisinePreference != null) 'cuisinePreference': cuisinePreference,
+      },
     );
     return UserSummary.fromJson(data);
   }

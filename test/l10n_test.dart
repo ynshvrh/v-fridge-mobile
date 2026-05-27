@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:v_fridge/l10n/l10n.dart';
+import 'package:v_fridge/models/cuisines.dart';
 
 void main() {
   Widget wrap(Locale locale, Widget child) => MaterialApp(
@@ -39,6 +40,37 @@ void main() {
     expect(l10n.chatTitle, 'AI шеф');
     expect(categoryLabel(l10n, 'meat-fish'), 'М\'ясо та риба');
     expect(plannerDayLabel(l10n, 'Monday'), 'Понеділок');
+  });
+
+  testWidgets('Cuisine labels resolve in both locales', (tester) async {
+    late AppLocalizations en;
+    await tester.pumpWidget(wrap(const Locale('en'), Builder(builder: (ctx) {
+      en = AppLocalizations.of(ctx);
+      return const SizedBox.shrink();
+    })));
+    expect(cuisineLabel(en, 'ukrainian'), 'Ukrainian');
+    expect(cuisineLabel(en, 'middle-eastern'), 'Middle Eastern');
+    expect(cuisineLabel(en, 'any'), 'No preference');
+    expect(cuisineLabel(en, 'unknown-slug'), 'No preference');
+
+    late AppLocalizations uk;
+    await tester.pumpWidget(wrap(const Locale('uk'), Builder(builder: (ctx) {
+      uk = AppLocalizations.of(ctx);
+      return const SizedBox.shrink();
+    })));
+    expect(cuisineLabel(uk, 'ukrainian'), 'Українська');
+    expect(cuisineLabel(uk, 'japanese'), 'Японська');
+    expect(cuisineLabel(uk, 'any'), 'Без переваг');
+  });
+
+  test('Cuisine.fromCountryCode maps known countries and falls back to any', () {
+    expect(Cuisines.fromCountryCode('UA'), 'ukrainian');
+    expect(Cuisines.fromCountryCode('ua'), 'ukrainian'); // case-insensitive
+    expect(Cuisines.fromCountryCode('GE'), 'georgian');
+    expect(Cuisines.fromCountryCode('JP'), 'japanese');
+    expect(Cuisines.fromCountryCode('US'), 'american');
+    expect(Cuisines.fromCountryCode('ZZ'), Cuisines.any);
+    expect(Cuisines.fromCountryCode(null), Cuisines.any);
   });
 
   testWidgets('Plural rules pick the right Ukrainian form', (tester) async {

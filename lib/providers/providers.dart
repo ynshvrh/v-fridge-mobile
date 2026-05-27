@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../api/api_client.dart';
 import '../api/services.dart';
 import '../models/api_models.dart';
+import '../models/cuisines.dart';
 import 'locale_provider.dart';
 
 /// Base URL of the v-fridge-api. Override at build time with:
@@ -68,13 +69,15 @@ class AuthController extends StateNotifier<AuthState> {
 
   /// Signup does NOT auto-login on the server — the user still needs to verify their email.
   /// The current resolved locale rides along so the new account starts with the right
-  /// preferredLanguage (no extra PATCH needed after verification).
+  /// preferredLanguage; the cuisine is derived from the device country code so the chef
+  /// has a sensible default immediately.
   Future<UserSummary> signup(String username, String email, String password) =>
       _auth.signup(
         username,
         email,
         password,
         preferredLanguage: LocaleController.resolveLanguageCode(_locale.state),
+        cuisinePreference: Cuisines.defaultForDevice(),
       );
 
   Future<void> verifyEmail(String token) async {
@@ -106,6 +109,14 @@ class AuthController extends StateNotifier<AuthState> {
   Future<void> updatePreferredLanguage(String code) async {
     if (state.status != AuthStatus.authenticated) return;
     final updated = await _auth.updatePreferences(preferredLanguage: code);
+    state = state.copyWith(user: updated);
+  }
+
+  /// Pushes a new cuisine preference to the server. The chef reads it on the next
+  /// chat request — no client-side rendering changes immediately.
+  Future<void> updateCuisinePreference(String slug) async {
+    if (state.status != AuthStatus.authenticated) return;
+    final updated = await _auth.updatePreferences(cuisinePreference: slug);
     state = state.copyWith(user: updated);
   }
 }
