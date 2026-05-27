@@ -30,6 +30,9 @@ dependencies:
   # Date formatting (pinned to the version flutter_localizations requires)
   intl: ^0.20.2
 
+  # Geist Sans typography — same font family the web client uses
+  google_fonts: ^6.2.1
+
   # Google sign-in (ID-token flow, no Firebase needed)
   google_sign_in: ^6.2.2
 
