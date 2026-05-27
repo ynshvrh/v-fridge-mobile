@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/l10n.dart';
 import '../../models/api_models.dart';
 import '../../providers/providers.dart';
+import '../../theme/vf_colors.dart';
+import '../../theme/vf_radius.dart';
 
 class ShoppingScreen extends ConsumerStatefulWidget {
   const ShoppingScreen({super.key});
@@ -90,7 +92,7 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _items.isEmpty
-              ? Center(child: Padding(padding: const EdgeInsets.all(24), child: Text(l10n.shoppingEmpty, textAlign: TextAlign.center)))
+              ? _ShoppingEmptyState(message: l10n.shoppingEmpty)
               : RefreshIndicator(
                   onRefresh: _load,
                   child: ListView(
@@ -108,6 +110,43 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
                   ),
                 ),
       floatingActionButton: FloatingActionButton(onPressed: _add, child: const Icon(Icons.add)),
+    );
+  }
+}
+
+class _ShoppingEmptyState extends StatelessWidget {
+  const _ShoppingEmptyState({required this.message});
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final vf = context.vfColors;
+    return ListView(
+      padding: const EdgeInsets.all(24),
+      children: [
+        const SizedBox(height: 48),
+        Container(
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: scheme.surface,
+            borderRadius: VfRadius.brXxxl,
+            border: Border.all(color: scheme.outline),
+          ),
+          child: Column(
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(color: vf.celadon, borderRadius: VfRadius.brXl),
+                child: Icon(Icons.shopping_basket_outlined, size: 36, color: scheme.onSurface),
+              ),
+              const SizedBox(height: 16),
+              Text(message, textAlign: TextAlign.center, style: TextStyle(color: vf.mutedForeground)),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

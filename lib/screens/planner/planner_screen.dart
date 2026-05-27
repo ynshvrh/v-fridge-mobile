@@ -4,8 +4,70 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/l10n.dart';
 import '../../models/api_models.dart';
 import '../../providers/providers.dart';
+import '../../theme/vf_colors.dart';
+import '../../theme/vf_radius.dart';
 
 const _dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+class _PlannerEmptyState extends StatelessWidget {
+  const _PlannerEmptyState({required this.loading, required this.error, required this.onGenerate});
+  final bool loading;
+  final String? error;
+  final VoidCallback onGenerate;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final vf = context.vfColors;
+    return ListView(
+      padding: const EdgeInsets.all(24),
+      children: [
+        const SizedBox(height: 48),
+        Container(
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: scheme.surface,
+            borderRadius: VfRadius.brXxxl,
+            border: Border.all(color: scheme.outline),
+          ),
+          child: Column(
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(color: vf.celadon, borderRadius: VfRadius.brXl),
+                child: Icon(Icons.auto_awesome, size: 36, color: scheme.onSurface),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                l10n.plannerEmptyTitle,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                l10n.plannerEmptyBody,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: vf.mutedForeground),
+              ),
+              if (error != null) ...[
+                const SizedBox(height: 12),
+                Text(error!, textAlign: TextAlign.center, style: TextStyle(color: scheme.error)),
+              ],
+              const SizedBox(height: 20),
+              FilledButton.icon(
+                onPressed: loading ? null : onGenerate,
+                icon: const Icon(Icons.auto_awesome),
+                label: Text(l10n.plannerGenerate),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
 
 class PlannerScreen extends ConsumerStatefulWidget {
   const PlannerScreen({super.key});
@@ -67,23 +129,10 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
         ],
       ),
       body: plan == null
-          ? Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.restaurant_menu, size: 64),
-                    const SizedBox(height: 12),
-                    Text(l10n.plannerEmptyTitle, style: Theme.of(context).textTheme.titleLarge),
-                    const SizedBox(height: 8),
-                    Text(l10n.plannerEmptyBody, textAlign: TextAlign.center),
-                    const SizedBox(height: 16),
-                    if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 12), child: Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error))),
-                    FilledButton.icon(onPressed: _loading ? null : _generate, icon: const Icon(Icons.auto_awesome), label: Text(l10n.plannerGenerate)),
-                  ],
-                ),
-              ),
+          ? _PlannerEmptyState(
+              loading: _loading,
+              error: _error,
+              onGenerate: _generate,
             )
           : ListView(
               padding: const EdgeInsets.all(16),

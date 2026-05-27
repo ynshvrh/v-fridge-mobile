@@ -69,11 +69,18 @@
   "barcodeNotFound": "Продукт не знайдено в OpenFoodFacts",
 
   "chatTitle": "AI шеф",
+  "chatSubtitle": "онлайн і готовий",
   "chatEmpty": "Запитайте шефа, що приготувати з того, що є.",
+  "chatEmptyHero": "Що готуємо сьогодні?",
+  "chatThinking": "Шеф готує відповідь…",
   "chatInputHint": "Запитайте рецепт…",
   "chatRateLimit": "Забагато запитів. Спробуйте за хвилину.",
   "chatClearTitle": "Очистити історію чату?",
   "chatClearAction": "Очистити",
+  "chatPrompt1": "Що приготувати на вечерю?",
+  "chatPrompt2": "Допоможи використати те, що псується",
+  "chatPrompt3": "Швидка страва за 20 хвилин",
+  "chatPrompt4": "Щось легке і корисне",
 
   "shoppingTitle": "Список покупок",
   "shoppingEmpty": "Ваш список порожній.",

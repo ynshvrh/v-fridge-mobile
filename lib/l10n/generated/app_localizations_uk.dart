@@ -215,7 +215,16 @@ class AppLocalizationsUk extends AppLocalizations {
   String get chatTitle => 'AI шеф';
 
   @override
+  String get chatSubtitle => 'онлайн і готовий';
+
+  @override
   String get chatEmpty => 'Запитайте шефа, що приготувати з того, що є.';
+
+  @override
+  String get chatEmptyHero => 'Що готуємо сьогодні?';
+
+  @override
+  String get chatThinking => 'Шеф готує відповідь…';
 
   @override
   String get chatInputHint => 'Запитайте рецепт…';
@@ -228,6 +237,18 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get chatClearAction => 'Очистити';
+
+  @override
+  String get chatPrompt1 => 'Що приготувати на вечерю?';
+
+  @override
+  String get chatPrompt2 => 'Допоможи використати те, що псується';
+
+  @override
+  String get chatPrompt3 => 'Швидка страва за 20 хвилин';
+
+  @override
+  String get chatPrompt4 => 'Щось легке і корисне';
 
   @override
   String get shoppingTitle => 'Список покупок';

@@ -211,7 +211,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatTitle => 'AI chef';
 
   @override
+  String get chatSubtitle => 'online and ready';
+
+  @override
   String get chatEmpty => 'Ask the chef what to cook with what you have.';
+
+  @override
+  String get chatEmptyHero => 'What are we cooking today?';
+
+  @override
+  String get chatThinking => 'Chef is cooking up a reply…';
 
   @override
   String get chatInputHint => 'Ask for a recipe…';
@@ -224,6 +233,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatClearAction => 'Clear';
+
+  @override
+  String get chatPrompt1 => 'What can I cook tonight?';
+
+  @override
+  String get chatPrompt2 => 'Help me use up what is expiring';
+
+  @override
+  String get chatPrompt3 => 'A quick 20-minute meal';
+
+  @override
+  String get chatPrompt4 => 'Something light and healthy';
 
   @override
   String get shoppingTitle => 'Shopping list';
