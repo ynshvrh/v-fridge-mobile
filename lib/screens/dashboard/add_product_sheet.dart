@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../l10n/l10n.dart';
 import '../../models/api_models.dart';
 import '../../providers/providers.dart';
 import 'barcode_scanner.dart';
@@ -65,7 +66,7 @@ class _AddProductSheetState extends ConsumerState<AddProductSheet> {
       _category = Categories.slugs.contains(scanned.category) ? scanned.category : 'other';
     });
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Filled from barcode ${scanned.barcode}')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.addProductFilledFromBarcode(scanned.barcode))));
     }
   }
 
@@ -80,13 +81,14 @@ class _AddProductSheetState extends ConsumerState<AddProductSheet> {
   }
 
   Future<void> _save() async {
+    final l10n = context.l10n;
     final qty = double.tryParse(_quantity.text.replaceAll(',', '.')) ?? 0;
     if (_name.text.trim().length < 2) {
-      setState(() => _error = 'Name is too short');
+      setState(() => _error = l10n.addProductNameTooShort);
       return;
     }
     if (qty <= 0) {
-      setState(() => _error = 'Quantity must be greater than 0');
+      setState(() => _error = l10n.addProductQuantityTooLow);
       return;
     }
     setState(() { _saving = true; _error = null; });
@@ -124,9 +126,10 @@ class _AddProductSheetState extends ConsumerState<AddProductSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final inset = MediaQuery.of(context).viewInsets.bottom;
-    final title = widget.isEdit ? 'Edit product' : 'Add product';
-    final actionLabel = widget.isEdit ? 'Save' : 'Add to fridge';
+    final title = widget.isEdit ? l10n.addProductEditTitle : l10n.addProductTitle;
+    final actionLabel = widget.isEdit ? l10n.actionSave : l10n.addProductActionAdd;
     return Padding(
       padding: EdgeInsets.only(bottom: inset),
       child: SafeArea(
@@ -149,11 +152,11 @@ class _AddProductSheetState extends ConsumerState<AddProductSheet> {
                 OutlinedButton.icon(
                   onPressed: _saving ? null : _scanBarcode,
                   icon: const Icon(Icons.qr_code_scanner),
-                  label: const Text('Scan barcode'),
+                  label: Text(l10n.addProductScanBarcode),
                 ),
                 const SizedBox(height: 12),
               ],
-              TextField(controller: _name, decoration: const InputDecoration(labelText: 'Name')),
+              TextField(controller: _name, decoration: InputDecoration(labelText: l10n.addProductName)),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -161,7 +164,7 @@ class _AddProductSheetState extends ConsumerState<AddProductSheet> {
                     flex: 2,
                     child: TextField(
                       controller: _quantity,
-                      decoration: const InputDecoration(labelText: 'Quantity'),
+                      decoration: InputDecoration(labelText: l10n.addProductQuantity),
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     ),
                   ),
@@ -169,7 +172,7 @@ class _AddProductSheetState extends ConsumerState<AddProductSheet> {
                   Expanded(
                     child: DropdownButtonFormField<String>(
                       initialValue: _unit,
-                      decoration: const InputDecoration(labelText: 'Unit'),
+                      decoration: InputDecoration(labelText: l10n.addProductUnit),
                       items: _units.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
                       onChanged: (v) => setState(() => _unit = v ?? 'pcs'),
                     ),
@@ -179,19 +182,19 @@ class _AddProductSheetState extends ConsumerState<AddProductSheet> {
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 initialValue: _category,
-                decoration: const InputDecoration(labelText: 'Category'),
+                decoration: InputDecoration(labelText: l10n.addProductCategory),
                 items: Categories.slugs
-                    .map((s) => DropdownMenuItem(value: s, child: Text(Categories.label(s))))
+                    .map((s) => DropdownMenuItem(value: s, child: Text(categoryLabel(l10n, s))))
                     .toList(),
                 onChanged: (v) => setState(() => _category = v ?? 'other'),
               ),
               const SizedBox(height: 12),
               InputDecorator(
-                decoration: const InputDecoration(labelText: 'Expiry date'),
+                decoration: InputDecoration(labelText: l10n.addProductExpiry),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(_expiry == null ? 'No date' : DateFormat('MMMM d, yyyy').format(_expiry!)),
+                    Text(_expiry == null ? l10n.productNoDate : DateFormat('MMMM d, yyyy').format(_expiry!)),
                     Row(children: [
                       if (_expiry != null)
                         IconButton(onPressed: () => setState(() { _expiry = null; _expiryChanged = true; }), icon: const Icon(Icons.close)),

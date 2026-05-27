@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../l10n/l10n.dart';
 import '../../models/api_models.dart';
 import '../../providers/providers.dart';
 import 'add_product_sheet.dart';
@@ -46,13 +47,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   Future<void> _delete(Product p) async {
+    final l10n = context.l10n;
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Delete "${p.name}"?'),
+        title: Text(l10n.dashboardConfirmDeleteTitle(p.name)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.actionCancel)),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.actionDelete)),
         ],
       ),
     );
@@ -66,11 +68,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   Future<void> _consume(Product p) async {
+    final l10n = context.l10n;
     try {
       await ref.read(productsServiceProvider).patch(p.id, quantity: 0);
       if (mounted) _reload();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('"${p.name}" finished — logged')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.dashboardConsumeLogged(p.name))));
       }
     } on ApiError catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
@@ -118,7 +121,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _add,
         icon: const Icon(Icons.add),
-        label: const Text('Add product'),
+        label: Text(context.l10n.dashboardAddProduct),
       ),
     );
   }
@@ -140,7 +143,8 @@ class _ProductTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final freshness = _freshness(product.expiryDate);
+    final l10n = context.l10n;
+    final freshness = _freshness(l10n, product.expiryDate);
     return Card(
       child: ListTile(
         onTap: onTap,
@@ -148,7 +152,7 @@ class _ProductTile extends StatelessWidget {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('${product.quantity.toStringAsFixed(product.quantity % 1 == 0 ? 0 : 1)} ${product.unit} · ${Categories.label(product.category)}'),
+            Text('${product.quantity.toStringAsFixed(product.quantity % 1 == 0 ? 0 : 1)} ${product.unit} · ${categoryLabel(l10n, product.category)}'),
             const SizedBox(height: 4),
             Row(
               children: [
@@ -165,22 +169,23 @@ class _ProductTile extends StatelessWidget {
             if (v == 'delete') onDelete();
             if (v == 'consume') onConsume();
           },
-          itemBuilder: (_) => const [
-            PopupMenuItem(value: 'edit', child: ListTile(leading: Icon(Icons.edit_outlined), title: Text('Edit'))),
-            PopupMenuItem(value: 'consume', child: ListTile(leading: Icon(Icons.check_circle_outline), title: Text('Mark finished'))),
-            PopupMenuItem(value: 'delete', child: ListTile(leading: Icon(Icons.delete_outline), title: Text('Delete'))),
+          itemBuilder: (_) => [
+            PopupMenuItem(value: 'edit', child: ListTile(leading: const Icon(Icons.edit_outlined), title: Text(l10n.actionEdit))),
+            PopupMenuItem(value: 'consume', child: ListTile(leading: const Icon(Icons.check_circle_outline), title: Text(l10n.productActionMarkFinished))),
+            PopupMenuItem(value: 'delete', child: ListTile(leading: const Icon(Icons.delete_outline), title: Text(l10n.actionDelete))),
           ],
         ),
       ),
     );
   }
 
-  ({String label, Color color}) _freshness(DateTime? d) {
-    if (d == null) return (label: 'No date', color: Colors.grey);
+  ({String label, Color color}) _freshness(AppLocalizations l10n, DateTime? d) {
+    if (d == null) return (label: l10n.productNoDate, color: Colors.grey);
     final diff = d.difference(DateTime.now()).inDays;
-    if (diff < 0) return (label: 'Expired ${DateFormat('MMM d').format(d)}', color: Colors.red);
-    if (diff <= 3) return (label: '$diff ${diff == 1 ? 'day' : 'days'} left', color: Colors.orange);
-    return (label: 'Fresh until ${DateFormat('MMM d').format(d)}', color: Colors.green);
+    final dateStr = DateFormat('MMM d').format(d);
+    if (diff < 0) return (label: l10n.productExpired(dateStr), color: Colors.red);
+    if (diff <= 3) return (label: l10n.productDaysLeft(diff), color: Colors.orange);
+    return (label: l10n.productFreshUntil(dateStr), color: Colors.green);
   }
 }
 
@@ -190,17 +195,18 @@ class _EmptyView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return ListView(
       padding: const EdgeInsets.all(32),
       children: [
         const SizedBox(height: 64),
         const Icon(Icons.kitchen_outlined, size: 72),
         const SizedBox(height: 12),
-        Text('Your fridge is empty', textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall),
+        Text(l10n.dashboardEmptyTitle, textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall),
         const SizedBox(height: 8),
-        const Text('Add the first product to get started.', textAlign: TextAlign.center),
+        Text(l10n.dashboardEmptyBody, textAlign: TextAlign.center),
         const SizedBox(height: 24),
-        FilledButton.icon(onPressed: onAdd, icon: const Icon(Icons.add), label: const Text('Add product')),
+        FilledButton.icon(onPressed: onAdd, icon: const Icon(Icons.add), label: Text(l10n.dashboardAddProduct)),
       ],
     );
   }
@@ -223,7 +229,7 @@ class _ErrorView extends StatelessWidget {
             const SizedBox(height: 8),
             Text(message, textAlign: TextAlign.center),
             const SizedBox(height: 12),
-            FilledButton(onPressed: onRetry, child: const Text('Retry')),
+            FilledButton(onPressed: onRetry, child: Text(context.l10n.actionRetry)),
           ],
         ),
       ),

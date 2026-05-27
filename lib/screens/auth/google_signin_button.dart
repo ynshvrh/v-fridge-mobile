@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+import '../../l10n/l10n.dart';
 import '../../models/api_models.dart';
 import '../../providers/providers.dart';
 
@@ -40,7 +41,7 @@ class _GoogleSignInButtonState extends ConsumerState<GoogleSignInButton> {
     } on ApiError catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Google sign-in failed: $e')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.signinGoogleFailed(e.toString()))));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -54,7 +55,7 @@ class _GoogleSignInButtonState extends ConsumerState<GoogleSignInButton> {
       icon: _busy
           ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
           : const Icon(Icons.login),
-      label: const Text('Continue with Google'),
+      label: Text(context.l10n.signinContinueWithGoogle),
       style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
     );
   }

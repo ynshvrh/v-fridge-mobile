@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../l10n/l10n.dart';
 import '../../models/api_models.dart';
 import '../../providers/providers.dart';
 
@@ -72,7 +73,7 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
       final product = await ref.read(shoppingServiceProvider).purchase(item.id);
       setState(() => _items = _items.where((i) => i.id != item.id).toList());
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('"${product.name}" added to the fridge')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.shoppingAddedToFridge(product.name))));
       }
     } on ApiError catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
@@ -81,25 +82,26 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final unchecked = _items.where((i) => !i.checked).toList();
     final checked = _items.where((i) => i.checked).toList();
     return Scaffold(
-      appBar: AppBar(title: const Text('Shopping list')),
+      appBar: AppBar(title: Text(l10n.shoppingTitle)),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _items.isEmpty
-              ? const Center(child: Padding(padding: EdgeInsets.all(24), child: Text('Your list is empty.', textAlign: TextAlign.center)))
+              ? Center(child: Padding(padding: const EdgeInsets.all(24), child: Text(l10n.shoppingEmpty, textAlign: TextAlign.center)))
               : RefreshIndicator(
                   onRefresh: _load,
                   child: ListView(
                     padding: const EdgeInsets.all(8),
                     children: [
                       if (unchecked.isNotEmpty) ...[
-                        const _SectionHeader(label: 'To buy'),
+                        _SectionHeader(label: l10n.shoppingToBuy),
                         ...unchecked.map((i) => _Tile(item: i, onToggle: () => _toggle(i), onDelete: () => _delete(i), onPurchase: () => _purchase(i))),
                       ],
                       if (checked.isNotEmpty) ...[
-                        const _SectionHeader(label: 'Got them'),
+                        _SectionHeader(label: l10n.shoppingGotThem),
                         ...checked.map((i) => _Tile(item: i, onToggle: () => _toggle(i), onDelete: () => _delete(i), onPurchase: () => _purchase(i))),
                       ],
                     ],
@@ -131,6 +133,7 @@ class _Tile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Card(
       child: ListTile(
         leading: Checkbox(value: item.checked, onChanged: (_) => onToggle()),
@@ -140,13 +143,13 @@ class _Tile extends StatelessWidget {
         ),
         subtitle: Text(
           (item.quantity != null ? '${item.quantity!.toStringAsFixed(item.quantity! % 1 == 0 ? 0 : 1)} ${item.unit ?? ''} · ' : '')
-              + Categories.label(item.category),
+              + categoryLabel(l10n, item.category),
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (!item.checked)
-              IconButton(onPressed: onPurchase, icon: const Icon(Icons.check_circle_outline), tooltip: 'Move to fridge'),
+              IconButton(onPressed: onPurchase, icon: const Icon(Icons.check_circle_outline), tooltip: l10n.shoppingMoveToFridge),
             IconButton(onPressed: onDelete, icon: const Icon(Icons.delete_outline)),
           ],
         ),
@@ -180,7 +183,7 @@ class _AddShoppingItemSheetState extends ConsumerState<_AddShoppingItemSheet> {
   }
 
   Future<void> _save() async {
-    if (_name.text.trim().isEmpty) { setState(() => _error = 'Name is required'); return; }
+    if (_name.text.trim().isEmpty) { setState(() => _error = context.l10n.shoppingNameRequired); return; }
     setState(() { _saving = true; _error = null; });
     try {
       final qty = double.tryParse(_quantity.text.replaceAll(',', '.'));
@@ -200,6 +203,7 @@ class _AddShoppingItemSheetState extends ConsumerState<_AddShoppingItemSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final inset = MediaQuery.of(context).viewInsets.bottom;
     return Padding(
       padding: EdgeInsets.only(bottom: inset),
@@ -210,18 +214,18 @@ class _AddShoppingItemSheetState extends ConsumerState<_AddShoppingItemSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Add to shopping list', style: Theme.of(context).textTheme.titleLarge),
+              Text(l10n.shoppingAddSheetTitle, style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 16),
               if (_error != null) Padding(padding: const EdgeInsets.only(bottom: 12), child: Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error))),
-              TextField(controller: _name, decoration: const InputDecoration(labelText: 'Item')),
+              TextField(controller: _name, decoration: InputDecoration(labelText: l10n.shoppingFieldItem)),
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Expanded(flex: 2, child: TextField(controller: _quantity, decoration: const InputDecoration(labelText: 'Qty'), keyboardType: const TextInputType.numberWithOptions(decimal: true))),
+                  Expanded(flex: 2, child: TextField(controller: _quantity, decoration: InputDecoration(labelText: l10n.shoppingFieldQty), keyboardType: const TextInputType.numberWithOptions(decimal: true))),
                   const SizedBox(width: 12),
                   Expanded(child: DropdownButtonFormField<String>(
                     initialValue: _unit,
-                    decoration: const InputDecoration(labelText: 'Unit'),
+                    decoration: InputDecoration(labelText: l10n.addProductUnit),
                     items: _units.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
                     onChanged: (v) => setState(() => _unit = v ?? 'pcs'),
                   )),
@@ -230,14 +234,14 @@ class _AddShoppingItemSheetState extends ConsumerState<_AddShoppingItemSheet> {
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 initialValue: _category,
-                decoration: const InputDecoration(labelText: 'Category'),
-                items: Categories.slugs.map((s) => DropdownMenuItem(value: s, child: Text(Categories.label(s)))).toList(),
+                decoration: InputDecoration(labelText: l10n.addProductCategory),
+                items: Categories.slugs.map((s) => DropdownMenuItem(value: s, child: Text(categoryLabel(l10n, s)))).toList(),
                 onChanged: (v) => setState(() => _category = v ?? 'other'),
               ),
               const SizedBox(height: 24),
               FilledButton(
                 onPressed: _saving ? null : _save,
-                child: _saving ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Add'),
+                child: _saving ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : Text(l10n.actionAdd),
               ),
             ],
           ),

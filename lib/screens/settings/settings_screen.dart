@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../l10n/l10n.dart';
 import '../../models/api_models.dart';
 import '../../providers/providers.dart';
 import '../../providers/theme_provider.dart';
@@ -11,11 +12,12 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final auth = ref.watch(authControllerProvider);
     final themeMode = ref.watch(themeControllerProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(title: Text(l10n.settingsTitle)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -30,15 +32,15 @@ class SettingsScreen extends ConsumerWidget {
           Card(
             child: ListTile(
               leading: const Icon(Icons.logout),
-              title: const Text('Sign out'),
+              title: Text(l10n.settingsSignOut),
               onTap: () async {
                 final ok = await showDialog<bool>(
                   context: context,
                   builder: (ctx) => AlertDialog(
-                    title: const Text('Sign out?'),
+                    title: Text(l10n.settingsSignOutConfirm),
                     actions: [
-                      TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-                      FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Sign out')),
+                      TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.actionCancel)),
+                      FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.settingsSignOut)),
                     ],
                   ),
                 );
@@ -85,7 +87,7 @@ class _ProfileCard extends StatelessWidget {
                           color: auth.user!.emailVerified ? Colors.green : Colors.orange,
                         ),
                         const SizedBox(width: 4),
-                        Text(auth.user!.emailVerified ? 'Email verified' : 'Email not verified',
+                        Text(auth.user!.emailVerified ? context.l10n.settingsEmailVerified : context.l10n.settingsEmailNotVerified,
                             style: Theme.of(context).textTheme.labelSmall),
                       ],
                     ),
@@ -107,6 +109,7 @@ class _ThemeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -117,15 +120,15 @@ class _ThemeCard extends StatelessWidget {
               children: [
                 const Icon(Icons.palette_outlined),
                 const SizedBox(width: 8),
-                Text('Appearance', style: Theme.of(context).textTheme.titleMedium),
+                Text(l10n.settingsAppearance, style: Theme.of(context).textTheme.titleMedium),
               ],
             ),
             const SizedBox(height: 8),
             SegmentedButton<ThemeMode>(
-              segments: const [
-                ButtonSegment(value: ThemeMode.light, label: Text('Light'), icon: Icon(Icons.light_mode_outlined)),
-                ButtonSegment(value: ThemeMode.dark, label: Text('Dark'), icon: Icon(Icons.dark_mode_outlined)),
-                ButtonSegment(value: ThemeMode.system, label: Text('System'), icon: Icon(Icons.brightness_auto_outlined)),
+              segments: [
+                ButtonSegment(value: ThemeMode.light, label: Text(l10n.settingsThemeLight), icon: const Icon(Icons.light_mode_outlined)),
+                ButtonSegment(value: ThemeMode.dark, label: Text(l10n.settingsThemeDark), icon: const Icon(Icons.dark_mode_outlined)),
+                ButtonSegment(value: ThemeMode.system, label: Text(l10n.settingsThemeSystem), icon: const Icon(Icons.brightness_auto_outlined)),
               ],
               selected: {mode},
               onSelectionChanged: (set) => onChanged(set.first),
@@ -142,17 +145,18 @@ class _DangerZone extends StatelessWidget {
   final WidgetRef ref;
 
   Future<void> _confirmAndRun(BuildContext context, {required String title, required Future<void> Function() action, required String successMessage}) async {
+    final l10n = context.l10n;
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(title),
-        content: const Text('This action cannot be undone.'),
+        content: Text(l10n.settingsCannotBeUndone),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.actionCancel)),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete'),
+            child: Text(l10n.actionDelete),
           ),
         ],
       ),
@@ -168,6 +172,7 @@ class _DangerZone extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     return Card(
       color: scheme.errorContainer.withValues(alpha: 0.25),
@@ -182,30 +187,30 @@ class _DangerZone extends StatelessWidget {
                 children: [
                   Icon(Icons.warning_amber_outlined, color: scheme.error),
                   const SizedBox(width: 8),
-                  Text('Danger zone', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: scheme.error)),
+                  Text(l10n.settingsDangerZone, style: Theme.of(context).textTheme.titleMedium?.copyWith(color: scheme.error)),
                 ],
               ),
             ),
             ListTile(
               leading: const Icon(Icons.delete_sweep_outlined),
-              title: const Text('Clear all products'),
-              subtitle: const Text('Empties the active fridge'),
+              title: Text(l10n.settingsClearProducts),
+              subtitle: Text(l10n.settingsClearProductsSubtitle),
               onTap: () => _confirmAndRun(
                 context,
-                title: 'Clear all products?',
+                title: l10n.settingsClearProductsConfirm,
                 action: () async { await ref.read(productsServiceProvider).deleteAll(); },
-                successMessage: 'Fridge cleared',
+                successMessage: l10n.settingsFridgeCleared,
               ),
             ),
             ListTile(
               leading: const Icon(Icons.delete_sweep_outlined),
-              title: const Text('Delete chat history'),
-              subtitle: const Text('Wipes the AI chef conversation'),
+              title: Text(l10n.settingsDeleteChat),
+              subtitle: Text(l10n.settingsDeleteChatSubtitle),
               onTap: () => _confirmAndRun(
                 context,
-                title: 'Delete chat history?',
+                title: l10n.settingsDeleteChatConfirm,
                 action: () => ref.read(chatServiceProvider).clear(),
-                successMessage: 'Chat history cleared',
+                successMessage: l10n.settingsChatCleared,
               ),
             ),
           ],

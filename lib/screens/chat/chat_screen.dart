@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../l10n/l10n.dart';
 import '../../models/api_models.dart';
 import '../../providers/providers.dart';
 
@@ -55,6 +56,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Future<void> _send() async {
     final text = _input.text.trim();
     if (text.isEmpty || _sending) return;
+    final rateLimitMessage = context.l10n.chatRateLimit;
     _input.clear();
     setState(() {
       _messages = [..._messages, ChatMessage(id: -1, role: 'user', content: text)];
@@ -66,9 +68,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       setState(() => _messages = [..._messages, reply]);
       _scrollToBottom();
     } on ApiError catch (e) {
+      if (!mounted) return;
       if (e.status == 429) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Too many requests. Try again in a minute.')));
-      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(rateLimitMessage)));
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
       }
     } finally {
@@ -77,13 +80,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Future<void> _clear() async {
+    final l10n = context.l10n;
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Clear chat history?'),
+        title: Text(l10n.chatClearTitle),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Clear')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.actionCancel)),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.chatClearAction)),
         ],
       ),
     );
@@ -98,9 +102,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AI chef'),
+        title: Text(l10n.chatTitle),
         actions: [
           IconButton(onPressed: _messages.isEmpty ? null : _clear, icon: const Icon(Icons.delete_sweep_outlined)),
         ],
@@ -111,10 +116,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
                 : _messages.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: Padding(
-                          padding: EdgeInsets.all(24),
-                          child: Text('Ask the chef what to cook with what you have.', textAlign: TextAlign.center),
+                          padding: const EdgeInsets.all(24),
+                          child: Text(l10n.chatEmpty, textAlign: TextAlign.center),
                         ),
                       )
                     : ListView.builder(
@@ -137,7 +142,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   Expanded(
                     child: TextField(
                       controller: _input,
-                      decoration: const InputDecoration(hintText: 'Ask for a recipe…'),
+                      decoration: InputDecoration(hintText: l10n.chatInputHint),
                       onSubmitted: (_) => _send(),
                       enabled: !_sending,
                     ),

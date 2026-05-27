@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
+import '../../l10n/l10n.dart';
 import '../../models/api_models.dart';
 
 class ScannedProduct {
@@ -55,7 +56,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
       final product = await _lookupOpenFoodFacts(raw);
       if (!mounted) return;
       if (product == null) {
-        setState(() { _processing = false; _error = 'Product not found in OpenFoodFacts'; });
+        setState(() { _processing = false; _error = context.l10n.barcodeNotFound; });
         await _controller.start();
         return;
       }
@@ -70,7 +71,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Scan barcode')),
+      appBar: AppBar(title: Text(context.l10n.barcodeTitle)),
       body: Stack(
         children: [
           MobileScanner(controller: _controller, onDetect: _onDetect),

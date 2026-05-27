@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'l10n/l10n.dart';
 import 'providers/providers.dart';
 import 'providers/theme_provider.dart';
 import 'screens/auth/signin_screen.dart';
@@ -22,11 +23,13 @@ class VFridgeApp extends ConsumerWidget {
     final darkScheme = ColorScheme.fromSeed(seedColor: const Color(0xFF8C5383), brightness: Brightness.dark);
 
     return MaterialApp(
-      title: 'V-Fridge',
+      onGenerateTitle: (ctx) => AppLocalizations.of(ctx).appTitle,
       debugShowCheckedModeBanner: false,
       themeMode: themeMode,
       theme: ThemeData(useMaterial3: true, colorScheme: colorScheme),
       darkTheme: ThemeData(useMaterial3: true, colorScheme: darkScheme),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: supportedAppLocales,
       home: switch (auth.status) {
         AuthStatus.loading => const _SplashScreen(),
         AuthStatus.authenticated => const HomeShell(),
