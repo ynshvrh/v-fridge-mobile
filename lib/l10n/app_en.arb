@@ -77,11 +77,18 @@
   "barcodeNotFound": "Product not found in OpenFoodFacts",
 
   "chatTitle": "AI chef",
+  "chatSubtitle": "online and ready",
   "chatEmpty": "Ask the chef what to cook with what you have.",
+  "chatEmptyHero": "What are we cooking today?",
+  "chatThinking": "Chef is cooking up a reply…",
   "chatInputHint": "Ask for a recipe…",
   "chatRateLimit": "Too many requests. Try again in a minute.",
   "chatClearTitle": "Clear chat history?",
   "chatClearAction": "Clear",
+  "chatPrompt1": "What can I cook tonight?",
+  "chatPrompt2": "Help me use up what is expiring",
+  "chatPrompt3": "A quick 20-minute meal",
+  "chatPrompt4": "Something light and healthy",
 
   "shoppingTitle": "Shopping list",
   "shoppingEmpty": "Your list is empty.",

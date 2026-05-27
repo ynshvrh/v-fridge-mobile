@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import '../../l10n/l10n.dart';
 import '../../models/api_models.dart';
 import '../../providers/providers.dart';
+import '../../theme/vf_colors.dart';
+import '../../theme/vf_radius.dart';
 import 'add_product_sheet.dart';
 import 'analytics_tile.dart';
 
@@ -196,17 +198,44 @@ class _EmptyView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final vf = context.vfColors;
     return ListView(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(24),
       children: [
-        const SizedBox(height: 64),
-        const Icon(Icons.kitchen_outlined, size: 72),
-        const SizedBox(height: 12),
-        Text(l10n.dashboardEmptyTitle, textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall),
-        const SizedBox(height: 8),
-        Text(l10n.dashboardEmptyBody, textAlign: TextAlign.center),
-        const SizedBox(height: 24),
-        FilledButton.icon(onPressed: onAdd, icon: const Icon(Icons.add), label: Text(l10n.dashboardAddProduct)),
+        const SizedBox(height: 48),
+        Container(
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: scheme.surface,
+            borderRadius: VfRadius.brXxxl,
+            border: Border.all(color: scheme.outline),
+          ),
+          child: Column(
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(color: vf.celadon, borderRadius: VfRadius.brXl),
+                child: Icon(Icons.kitchen_outlined, size: 36, color: scheme.onSurface),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                l10n.dashboardEmptyTitle,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                l10n.dashboardEmptyBody,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: vf.mutedForeground),
+              ),
+              const SizedBox(height: 20),
+              FilledButton.icon(onPressed: onAdd, icon: const Icon(Icons.add), label: Text(l10n.dashboardAddProduct)),
+            ],
+          ),
+        ),
       ],
     );
   }

@@ -458,11 +458,29 @@ abstract class AppLocalizations {
   /// **'AI chef'**
   String get chatTitle;
 
+  /// No description provided for @chatSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'online and ready'**
+  String get chatSubtitle;
+
   /// No description provided for @chatEmpty.
   ///
   /// In en, this message translates to:
   /// **'Ask the chef what to cook with what you have.'**
   String get chatEmpty;
+
+  /// No description provided for @chatEmptyHero.
+  ///
+  /// In en, this message translates to:
+  /// **'What are we cooking today?'**
+  String get chatEmptyHero;
+
+  /// No description provided for @chatThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'Chef is cooking up a reply…'**
+  String get chatThinking;
 
   /// No description provided for @chatInputHint.
   ///
@@ -487,6 +505,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear'**
   String get chatClearAction;
+
+  /// No description provided for @chatPrompt1.
+  ///
+  /// In en, this message translates to:
+  /// **'What can I cook tonight?'**
+  String get chatPrompt1;
+
+  /// No description provided for @chatPrompt2.
+  ///
+  /// In en, this message translates to:
+  /// **'Help me use up what is expiring'**
+  String get chatPrompt2;
+
+  /// No description provided for @chatPrompt3.
+  ///
+  /// In en, this message translates to:
+  /// **'A quick 20-minute meal'**
+  String get chatPrompt3;
+
+  /// No description provided for @chatPrompt4.
+  ///
+  /// In en, this message translates to:
+  /// **'Something light and healthy'**
+  String get chatPrompt4;
 
   /// No description provided for @shoppingTitle.
   ///

@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/l10n.dart';
 import '../../models/api_models.dart';
 import '../../providers/providers.dart';
+import '../../theme/vf_colors.dart';
+import '../../theme/vf_radius.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen({super.key});
@@ -53,11 +55,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     });
   }
 
-  Future<void> _send() async {
-    final text = _input.text.trim();
+  Future<void> _send([String? overrideText]) async {
+    final text = (overrideText ?? _input.text).trim();
     if (text.isEmpty || _sending) return;
     final rateLimitMessage = context.l10n.chatRateLimit;
-    _input.clear();
+    if (overrideText == null) _input.clear();
     setState(() {
       _messages = [..._messages, ChatMessage(id: -1, role: 'user', content: text)];
       _sending = true;
@@ -104,27 +106,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.chatTitle),
-        actions: [
-          IconButton(onPressed: _messages.isEmpty ? null : _clear, icon: const Icon(Icons.delete_sweep_outlined)),
-        ],
-      ),
+      appBar: _ChatAppBar(onClear: _messages.isEmpty ? null : _clear),
       body: Column(
         children: [
           Expanded(
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
                 : _messages.isEmpty
-                    ? Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Text(l10n.chatEmpty, textAlign: TextAlign.center),
-                        ),
-                      )
+                    ? _EmptyState(onPickPrompt: _send)
                     : ListView.builder(
                         controller: _scroll,
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                         itemCount: _messages.length + (_sending ? 1 : 0),
                         itemBuilder: (_, i) {
                           if (i == _messages.length) return const _TypingBubble();
@@ -136,7 +128,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           SafeArea(
             top: false,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
               child: Row(
                 children: [
                   Expanded(
@@ -147,15 +139,170 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       enabled: !_sending,
                     ),
                   ),
-                  IconButton.filled(
-                    onPressed: _sending ? null : _send,
-                    icon: const Icon(Icons.send),
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    width: 48,
+                    height: 48,
+                    child: FilledButton(
+                      onPressed: _sending ? null : () => _send(),
+                      style: FilledButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        shape: const RoundedRectangleBorder(borderRadius: VfRadius.brLg),
+                      ),
+                      child: const Icon(Icons.send, size: 20),
+                    ),
                   ),
                 ],
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
+  const _ChatAppBar({required this.onClear});
+  final VoidCallback? onClear;
+
+  @override
+  Size get preferredSize => const Size.fromHeight(72);
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final vf = context.vfColors;
+    return AppBar(
+      toolbarHeight: 72,
+      titleSpacing: 12,
+      title: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(color: scheme.primary, borderRadius: VfRadius.brLg),
+            child: Icon(Icons.restaurant_menu, color: scheme.onPrimary, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(l10n.chatTitle, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+              const SizedBox(height: 2),
+              Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(color: vf.success, shape: BoxShape.circle),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    l10n.chatSubtitle,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(color: vf.mutedForeground),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+      actions: [
+        IconButton(onPressed: onClear, icon: const Icon(Icons.delete_sweep_outlined)),
+      ],
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState({required this.onPickPrompt});
+  final void Function(String prompt) onPickPrompt;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final vf = context.vfColors;
+    final prompts = [
+      l10n.chatPrompt1,
+      l10n.chatPrompt2,
+      l10n.chatPrompt3,
+      l10n.chatPrompt4,
+    ];
+
+    return ListView(
+      padding: const EdgeInsets.all(24),
+      children: [
+        const SizedBox(height: 24),
+        Center(
+          child: Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(color: scheme.primary, borderRadius: VfRadius.brXl),
+            child: Icon(Icons.restaurant_menu, size: 36, color: scheme.onPrimary),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          l10n.chatEmptyHero,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          l10n.chatEmpty,
+          textAlign: TextAlign.center,
+          style: TextStyle(color: vf.mutedForeground),
+        ),
+        const SizedBox(height: 24),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          childAspectRatio: 2.4,
+          children: prompts.map((p) => _PromptCard(text: p, onTap: () => onPickPrompt(p))).toList(),
+        ),
+      ],
+    );
+  }
+}
+
+class _PromptCard extends StatelessWidget {
+  const _PromptCard({required this.text, required this.onTap});
+  final String text;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final vf = context.vfColors;
+    return Material(
+      color: scheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: VfRadius.brLg,
+        side: BorderSide(color: scheme.outline),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: VfRadius.brLg,
+        splashColor: vf.celadonSoft,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Center(
+            child: Text(
+              text,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -169,21 +316,59 @@ class _Bubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final isAi = message.role == 'assistant' || message.role == 'model';
     final scheme = Theme.of(context).colorScheme;
-    return Align(
-      alignment: isAi ? Alignment.centerLeft : Alignment.centerRight,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
-        decoration: BoxDecoration(
-          color: isAi ? scheme.surfaceContainerHigh : scheme.primary,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Text(
-          message.content,
-          style: TextStyle(color: isAi ? scheme.onSurface : scheme.onPrimary),
-        ),
+    final vf = context.vfColors;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        mainAxisAlignment: isAi ? MainAxisAlignment.start : MainAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (isAi) ...[
+            _Avatar(icon: Icons.restaurant_menu, bg: scheme.primary, fg: scheme.onPrimary),
+            const SizedBox(width: 8),
+          ],
+          Flexible(
+            child: Container(
+              constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: isAi ? vf.celadonSoft : scheme.primary,
+                borderRadius: VfRadius.brXl,
+                border: Border.all(color: isAi ? scheme.outline : Colors.transparent),
+              ),
+              child: Text(
+                message.content,
+                style: TextStyle(
+                  color: isAi ? scheme.onSurface : scheme.onPrimary,
+                  fontWeight: FontWeight.w500,
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ),
+          if (!isAi) ...[
+            const SizedBox(width: 8),
+            _Avatar(icon: Icons.person, bg: vf.celadon, fg: scheme.onSurface),
+          ],
+        ],
       ),
+    );
+  }
+}
+
+class _Avatar extends StatelessWidget {
+  const _Avatar({required this.icon, required this.bg, required this.fg});
+  final IconData icon;
+  final Color bg;
+  final Color fg;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 32,
+      height: 32,
+      decoration: BoxDecoration(color: bg, borderRadius: VfRadius.brMd),
+      child: Icon(icon, size: 18, color: fg),
     );
   }
 }
@@ -193,16 +378,32 @@ class _TypingBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)),
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final vf = context.vfColors;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          _Avatar(icon: Icons.restaurant_menu, bg: scheme.primary, fg: scheme.onPrimary),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: vf.celadonSoft,
+              borderRadius: VfRadius.brXl,
+              border: Border.all(color: scheme.outline),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)),
+                const SizedBox(width: 10),
+                Text(l10n.chatThinking, style: TextStyle(color: vf.mutedForeground, fontWeight: FontWeight.w500)),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
