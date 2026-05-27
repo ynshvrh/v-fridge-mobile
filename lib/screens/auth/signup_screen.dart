@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../l10n/l10n.dart';
 import '../../models/api_models.dart';
 import '../../providers/providers.dart';
 import 'google_signin_button.dart';
@@ -48,6 +49,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(),
       body: SafeArea(
@@ -61,13 +63,13 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Text('Create account', textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall),
+                        Text(l10n.signupTitle, textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall),
                         const SizedBox(height: 24),
                         const GoogleSignInButton(),
                         const SizedBox(height: 16),
                         Row(children: [
                           const Expanded(child: Divider()),
-                          Padding(padding: const EdgeInsets.symmetric(horizontal: 12), child: Text('or', style: Theme.of(context).textTheme.labelSmall)),
+                          Padding(padding: const EdgeInsets.symmetric(horizontal: 12), child: Text(l10n.wordOr, style: Theme.of(context).textTheme.labelSmall)),
                           const Expanded(child: Divider()),
                         ]),
                         const SizedBox(height: 16),
@@ -83,16 +85,16 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                         if (_error != null) const SizedBox(height: 16),
                         TextField(
                           controller: _username,
-                          decoration: const InputDecoration(
-                            labelText: 'Display name (optional)',
-                            hintText: 'Leave empty to use your email prefix',
+                          decoration: InputDecoration(
+                            labelText: l10n.signupUsernameLabel,
+                            hintText: l10n.signupUsernameHint,
                           ),
                           enabled: !_loading,
                         ),
                         const SizedBox(height: 12),
                         TextField(
                           controller: _email,
-                          decoration: const InputDecoration(labelText: 'Email'),
+                          decoration: InputDecoration(labelText: l10n.signinEmail),
                           keyboardType: TextInputType.emailAddress,
                           autocorrect: false,
                           enabled: !_loading,
@@ -100,7 +102,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                         const SizedBox(height: 12),
                         TextField(
                           controller: _password,
-                          decoration: const InputDecoration(labelText: 'Password (min 6 chars)'),
+                          decoration: InputDecoration(labelText: l10n.signupPasswordLabel),
                           obscureText: true,
                           enabled: !_loading,
                           onSubmitted: (_) => _submit(),
@@ -110,11 +112,11 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                           onPressed: _loading ? null : _submit,
                           child: _loading
                               ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                              : const Text('Create account'),
+                              : Text(l10n.signupSubmit),
                         ),
                         TextButton(
                           onPressed: _loading ? null : () => Navigator.of(context).pop(),
-                          child: const Text('Already have an account? Sign in'),
+                          child: Text(l10n.signupHaveAccount),
                         ),
                       ],
                     ),
@@ -132,6 +134,7 @@ class _DoneCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -140,16 +143,16 @@ class _DoneCard extends StatelessWidget {
           children: [
             const Icon(Icons.mark_email_read_outlined, size: 56),
             const SizedBox(height: 12),
-            Text('Check your inbox', textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleLarge),
+            Text(l10n.signupDoneTitle, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
             Text(
-              'We sent a verification link to $email. Tap the link in the email and you will land back here signed in.',
+              l10n.signupDoneBody(email),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
             FilledButton.tonal(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Back to sign in'),
+              child: Text(l10n.signupBackToSignIn),
             ),
           ],
         ),

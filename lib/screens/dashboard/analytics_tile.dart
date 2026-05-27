@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../l10n/l10n.dart';
 import '../../models/api_models.dart';
 import '../../providers/providers.dart';
 
@@ -33,14 +34,15 @@ class _AnalyticsTileState extends ConsumerState<AnalyticsTile> {
     if (_loading) return const SizedBox.shrink();
     final s = _summary;
     if (s == null || s.isEmpty) return const SizedBox.shrink();
+    final l10n = context.l10n;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (s.mostWasted.isNotEmpty)
           _Section(
-            title: 'Most wasted',
-            subtitle: 'Last 30 days',
+            title: l10n.analyticsMostWasted,
+            subtitle: l10n.analyticsMostWastedSubtitle,
             icon: Icons.delete_outline,
             color: Theme.of(context).colorScheme.error,
             children: s.mostWasted.take(3).map((row) => _Row(
@@ -50,13 +52,13 @@ class _AnalyticsTileState extends ConsumerState<AnalyticsTile> {
           ),
         if (s.fastestConsumed.isNotEmpty)
           _Section(
-            title: 'Fastest consumed',
-            subtitle: 'Days from add to finished',
+            title: l10n.analyticsFastestConsumed,
+            subtitle: l10n.analyticsFastestConsumedSubtitle,
             icon: Icons.bolt_outlined,
             color: Theme.of(context).colorScheme.primary,
             children: s.fastestConsumed.take(3).map((row) => _Row(
                   primary: row.productName,
-                  secondary: '${row.ageDays}d · ${Categories.label(row.category)}',
+                  secondary: '${l10n.analyticsDaysShort(row.ageDays)} · ${categoryLabel(l10n, row.category)}',
                 )),
           ),
       ],

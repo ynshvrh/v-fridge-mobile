@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../l10n/l10n.dart';
 import '../../models/api_models.dart';
 import '../../providers/providers.dart';
 import 'google_signin_button.dart';
@@ -46,10 +47,11 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   }
 
   Future<void> _resend() async {
+    final l10n = context.l10n;
     try {
       await ref.read(authServiceProvider).resendVerification(_email.text.trim());
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Verification email sent')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.signinResendSent)));
       }
     } on ApiError catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
@@ -58,6 +60,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -70,13 +73,13 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                 children: [
                   const Icon(Icons.kitchen_rounded, size: 56),
                   const SizedBox(height: 12),
-                  Text('Welcome back', textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall),
+                  Text(l10n.signinTitle, textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall),
                   const SizedBox(height: 24),
                   const GoogleSignInButton(),
                   const SizedBox(height: 16),
                   Row(children: [
                     const Expanded(child: Divider()),
-                    Padding(padding: const EdgeInsets.symmetric(horizontal: 12), child: Text('or', style: Theme.of(context).textTheme.labelSmall)),
+                    Padding(padding: const EdgeInsets.symmetric(horizontal: 12), child: Text(l10n.wordOr, style: Theme.of(context).textTheme.labelSmall)),
                     const Expanded(child: Divider()),
                   ]),
                   const SizedBox(height: 16),
@@ -96,11 +99,11 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Email is not verified yet.', style: TextStyle(fontWeight: FontWeight.bold)),
+                            Text(l10n.signinNotVerifiedTitle, style: const TextStyle(fontWeight: FontWeight.bold)),
                             const SizedBox(height: 4),
-                            const Text('Check your inbox or send a new email.'),
+                            Text(l10n.signinNotVerifiedBody),
                             const SizedBox(height: 8),
-                            FilledButton.tonal(onPressed: _resend, child: const Text('Resend verification email')),
+                            FilledButton.tonal(onPressed: _resend, child: Text(l10n.signinResend)),
                           ],
                         ),
                       ),
@@ -108,7 +111,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                   if (_error != null || _needsVerify) const SizedBox(height: 16),
                   TextField(
                     controller: _email,
-                    decoration: const InputDecoration(labelText: 'Email'),
+                    decoration: InputDecoration(labelText: l10n.signinEmail),
                     keyboardType: TextInputType.emailAddress,
                     autocorrect: false,
                     enabled: !_loading,
@@ -116,7 +119,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                   const SizedBox(height: 12),
                   TextField(
                     controller: _password,
-                    decoration: const InputDecoration(labelText: 'Password'),
+                    decoration: InputDecoration(labelText: l10n.signinPassword),
                     obscureText: true,
                     enabled: !_loading,
                     onSubmitted: (_) => _submit(),
@@ -126,12 +129,12 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                     onPressed: _loading ? null : _submit,
                     child: _loading
                         ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Text('Sign in'),
+                        : Text(l10n.signinSubmit),
                   ),
                   const SizedBox(height: 8),
                   TextButton(
                     onPressed: _loading ? null : () => Navigator.of(context).pushReplacementNamed('/signup'),
-                    child: const Text('No account yet? Sign up'),
+                    child: Text(l10n.signinNoAccount),
                   ),
                 ],
               ),
