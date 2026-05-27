@@ -326,6 +326,24 @@ abstract class AppLocalizations {
   /// **'Add product'**
   String get dashboardAddProduct;
 
+  /// No description provided for @dashboardActiveFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory for'**
+  String get dashboardActiveFor;
+
+  /// No description provided for @shoppingActiveFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Shopping list for'**
+  String get shoppingActiveFor;
+
+  /// No description provided for @plannerActiveFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Meal plan for'**
+  String get plannerActiveFor;
+
   /// No description provided for @dashboardConfirmDeleteTitle.
   ///
   /// In en, this message translates to:
@@ -989,7 +1007,7 @@ abstract class AppLocalizations {
   /// No description provided for @fridgesActiveHint.
   ///
   /// In en, this message translates to:
-  /// **'The selected fridge is sent as X-Fridge-Id on every read. Leave none selected to use your first owned fridge.'**
+  /// **'Use the switcher in the top bar to change the active fridge. Shared fridges show up here once you accept an invite.'**
   String get fridgesActiveHint;
 
   /// No description provided for @analyticsMostWasted.

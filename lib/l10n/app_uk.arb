@@ -43,6 +43,9 @@
   "dashboardEmptyTitle": "Ваш холодильник порожній",
   "dashboardEmptyBody": "Додайте перший продукт, щоб почати.",
   "dashboardAddProduct": "Додати продукт",
+  "dashboardActiveFor": "Інвентар у",
+  "shoppingActiveFor": "Список покупок для",
+  "plannerActiveFor": "План страв для",
   "dashboardConfirmDeleteTitle": "Видалити «{name}»?",
   "dashboardConsumeLogged": "«{name}» закінчилось — записано",
 
@@ -161,7 +164,7 @@
   "fridgesMenuInvite": "Запросити",
   "fridgesMenuDelete": "Видалити",
   "fridgesMenuLeave": "Покинути",
-  "fridgesActiveHint": "Обраний холодильник надсилається як X-Fridge-Id у кожному запиті. Якщо нічого не обрано — використовується ваш перший власний холодильник.",
+  "fridgesActiveHint": "Використовуйте перемикач у верхній панелі, щоб змінити активний холодильник. Спільні холодильники з'являться тут після прийняття запрошення.",
 
   "analyticsMostWasted": "Найбільше викидається",
   "analyticsMostWastedSubtitle": "За останні 30 днів",

@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/l10n.dart';
 import '../../models/api_models.dart';
+import '../../providers/fridge_provider.dart';
 import '../../providers/providers.dart';
 import '../../theme/vf_colors.dart';
 import '../../theme/vf_radius.dart';
+import '../../widgets/fridge_switcher.dart';
 
 const _dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -115,6 +117,11 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    // Clear the current plan when the user switches fridges — the meals only make
+    // sense for the inventory that produced them.
+    ref.listen<int?>(activeFridgeIdProvider, (prev, next) {
+      if (prev != next && mounted) setState(() => _plan = null);
+    });
     final plan = _plan;
     final meals = plan == null ? <Meal>[] : ([...plan.meals]..sort((a, b) => _dayOrder.indexOf(a.day).compareTo(_dayOrder.indexOf(b.day))));
     return Scaffold(
@@ -126,10 +133,15 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
             icon: _loading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.auto_awesome),
             tooltip: l10n.plannerGenerate,
           ),
+          const FridgeSwitcher(),
         ],
       ),
-      body: plan == null
-          ? _PlannerEmptyState(
+      body: Column(
+        children: [
+          ActiveFridgeBanner(icon: Icons.calendar_today_outlined, label: l10n.plannerActiveFor),
+          Expanded(
+            child: plan == null
+                ? _PlannerEmptyState(
               loading: _loading,
               error: _error,
               onGenerate: _generate,
@@ -185,6 +197,9 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
                 ],
               ],
             ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -127,6 +127,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboardAddProduct => 'Add product';
 
   @override
+  String get dashboardActiveFor => 'Inventory for';
+
+  @override
+  String get shoppingActiveFor => 'Shopping list for';
+
+  @override
+  String get plannerActiveFor => 'Meal plan for';
+
+  @override
   String dashboardConfirmDeleteTitle(String name) {
     return 'Delete \"$name\"?';
   }
@@ -504,7 +513,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fridgesActiveHint =>
-      'The selected fridge is sent as X-Fridge-Id on every read. Leave none selected to use your first owned fridge.';
+      'Use the switcher in the top bar to change the active fridge. Shared fridges show up here once you accept an invite.';
 
   @override
   String get analyticsMostWasted => 'Most wasted';

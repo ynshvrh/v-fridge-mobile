@@ -129,6 +129,15 @@ class AppLocalizationsUk extends AppLocalizations {
   String get dashboardAddProduct => 'Додати продукт';
 
   @override
+  String get dashboardActiveFor => 'Інвентар у';
+
+  @override
+  String get shoppingActiveFor => 'Список покупок для';
+
+  @override
+  String get plannerActiveFor => 'План страв для';
+
+  @override
   String dashboardConfirmDeleteTitle(String name) {
     return 'Видалити «$name»?';
   }
@@ -512,7 +521,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get fridgesActiveHint =>
-      'Обраний холодильник надсилається як X-Fridge-Id у кожному запиті. Якщо нічого не обрано — використовується ваш перший власний холодильник.';
+      'Використовуйте перемикач у верхній панелі, щоб змінити активний холодильник. Спільні холодильники з\'являться тут після прийняття запрошення.';
 
   @override
   String get analyticsMostWasted => 'Найбільше викидається';
