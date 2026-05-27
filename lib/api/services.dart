@@ -5,13 +5,31 @@ class AuthService {
   AuthService(this._api);
   final ApiClient _api;
 
-  Future<UserSummary> signup(String username, String email, String password) async {
+  Future<UserSummary> signup(
+    String username,
+    String email,
+    String password, {
+    String? preferredLanguage,
+  }) async {
     final data = await _api.post<Map<String, dynamic>>(
       '/auth/signup',
-      body: {'username': username, 'email': email, 'password': password},
+      body: {
+        'username': username,
+        'email': email,
+        'password': password,
+        if (preferredLanguage != null) 'preferredLanguage': preferredLanguage,
+      },
       skipAuth: true,
     );
     return UserSummary.fromJson(data['user'] as Map<String, dynamic>);
+  }
+
+  Future<UserSummary> updatePreferences({required String preferredLanguage}) async {
+    final data = await _api.patch<Map<String, dynamic>>(
+      '/auth/me/preferences',
+      body: {'preferredLanguage': preferredLanguage},
+    );
+    return UserSummary.fromJson(data);
   }
 
   Future<TokenPair> login(String email, String password) async {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'l10n/l10n.dart';
+import 'providers/locale_provider.dart';
 import 'providers/providers.dart';
 import 'providers/theme_provider.dart';
 import 'screens/auth/signin_screen.dart';
@@ -19,6 +20,7 @@ class VFridgeApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authControllerProvider);
     final themeMode = ref.watch(themeControllerProvider);
+    final localeOverride = ref.watch(localeControllerProvider);
     final colorScheme = ColorScheme.fromSeed(seedColor: const Color(0xFF8C5383), brightness: Brightness.light);
     final darkScheme = ColorScheme.fromSeed(seedColor: const Color(0xFF8C5383), brightness: Brightness.dark);
 
@@ -28,6 +30,7 @@ class VFridgeApp extends ConsumerWidget {
       themeMode: themeMode,
       theme: ThemeData(useMaterial3: true, colorScheme: colorScheme),
       darkTheme: ThemeData(useMaterial3: true, colorScheme: darkScheme),
+      locale: localeOverride,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: supportedAppLocales,
       home: switch (auth.status) {
