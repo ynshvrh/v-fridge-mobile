@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/l10n.dart';
 import '../../models/api_models.dart';
+import '../../providers/fridge_provider.dart';
 import '../../providers/providers.dart';
 import '../../theme/vf_colors.dart';
 import '../../theme/vf_radius.dart';
+import '../../widgets/fridge_switcher.dart';
 
 class ShoppingScreen extends ConsumerStatefulWidget {
   const ShoppingScreen({super.key});
@@ -85,30 +87,43 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    ref.listen<int?>(activeFridgeIdProvider, (prev, next) {
+      if (prev != next) _load();
+    });
     final unchecked = _items.where((i) => !i.checked).toList();
     final checked = _items.where((i) => i.checked).toList();
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.shoppingTitle)),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _items.isEmpty
-              ? _ShoppingEmptyState(message: l10n.shoppingEmpty)
-              : RefreshIndicator(
-                  onRefresh: _load,
-                  child: ListView(
-                    padding: const EdgeInsets.all(8),
-                    children: [
-                      if (unchecked.isNotEmpty) ...[
-                        _SectionHeader(label: l10n.shoppingToBuy),
-                        ...unchecked.map((i) => _Tile(item: i, onToggle: () => _toggle(i), onDelete: () => _delete(i), onPurchase: () => _purchase(i))),
-                      ],
-                      if (checked.isNotEmpty) ...[
-                        _SectionHeader(label: l10n.shoppingGotThem),
-                        ...checked.map((i) => _Tile(item: i, onToggle: () => _toggle(i), onDelete: () => _delete(i), onPurchase: () => _purchase(i))),
-                      ],
-                    ],
-                  ),
-                ),
+      appBar: AppBar(
+        title: Text(l10n.shoppingTitle),
+        actions: const [FridgeSwitcher()],
+      ),
+      body: Column(
+        children: [
+          ActiveFridgeBanner(icon: Icons.shopping_basket_outlined, label: l10n.shoppingActiveFor),
+          Expanded(
+            child: _loading
+                ? const Center(child: CircularProgressIndicator())
+                : _items.isEmpty
+                    ? _ShoppingEmptyState(message: l10n.shoppingEmpty)
+                    : RefreshIndicator(
+                        onRefresh: _load,
+                        child: ListView(
+                          padding: const EdgeInsets.all(8),
+                          children: [
+                            if (unchecked.isNotEmpty) ...[
+                              _SectionHeader(label: l10n.shoppingToBuy),
+                              ...unchecked.map((i) => _Tile(item: i, onToggle: () => _toggle(i), onDelete: () => _delete(i), onPurchase: () => _purchase(i))),
+                            ],
+                            if (checked.isNotEmpty) ...[
+                              _SectionHeader(label: l10n.shoppingGotThem),
+                              ...checked.map((i) => _Tile(item: i, onToggle: () => _toggle(i), onDelete: () => _delete(i), onPurchase: () => _purchase(i))),
+                            ],
+                          ],
+                        ),
+                      ),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(onPressed: _add, child: const Icon(Icons.add)),
     );
   }

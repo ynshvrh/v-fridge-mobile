@@ -4,9 +4,11 @@ import 'package:intl/intl.dart';
 
 import '../../l10n/l10n.dart';
 import '../../models/api_models.dart';
+import '../../providers/fridge_provider.dart';
 import '../../providers/providers.dart';
 import '../../theme/vf_colors.dart';
 import '../../theme/vf_radius.dart';
+import '../../widgets/fridge_switcher.dart';
 import 'add_product_sheet.dart';
 import 'analytics_tile.dart';
 
@@ -84,46 +86,58 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    // When the user picks a different fridge anywhere in the app, refetch the inventory.
+    ref.listen<int?>(activeFridgeIdProvider, (prev, next) {
+      if (prev != next) _reload();
+    });
     return Scaffold(
-      body: RefreshIndicator(
-        onRefresh: () async => _reload(),
-        child: FutureBuilder<List<Product>>(
-          future: _future,
-          builder: (context, snap) {
-            if (snap.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snap.hasError) {
-              return _ErrorView(message: snap.error.toString(), onRetry: _reload);
-            }
-            final products = snap.data ?? [];
-            if (products.isEmpty) return _EmptyView(onAdd: _add);
+      body: Column(
+        children: [
+          ActiveFridgeBanner(icon: Icons.kitchen_outlined, label: l10n.dashboardActiveFor),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: () async => _reload(),
+              child: FutureBuilder<List<Product>>(
+                future: _future,
+                builder: (context, snap) {
+                  if (snap.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snap.hasError) {
+                    return _ErrorView(message: snap.error.toString(), onRetry: _reload);
+                  }
+                  final products = snap.data ?? [];
+                  if (products.isEmpty) return _EmptyView(onAdd: _add);
 
-            return ListView.builder(
-              padding: const EdgeInsets.only(top: 8, bottom: 80),
-              itemCount: products.length + 1,
-              itemBuilder: (_, i) {
-                if (i == 0) return const AnalyticsTile();
-                final p = products[i - 1];
-                return Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-                  child: _ProductTile(
-                    product: p,
-                    onTap: () => _edit(p),
-                    onEdit: () => _edit(p),
-                    onDelete: () => _delete(p),
-                    onConsume: () => _consume(p),
-                  ),
-                );
-              },
-            );
-          },
-        ),
+                  return ListView.builder(
+                    padding: const EdgeInsets.only(top: 8, bottom: 80),
+                    itemCount: products.length + 1,
+                    itemBuilder: (_, i) {
+                      if (i == 0) return const AnalyticsTile();
+                      final p = products[i - 1];
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+                        child: _ProductTile(
+                          product: p,
+                          onTap: () => _edit(p),
+                          onEdit: () => _edit(p),
+                          onDelete: () => _delete(p),
+                          onConsume: () => _consume(p),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _add,
         icon: const Icon(Icons.add),
-        label: Text(context.l10n.dashboardAddProduct),
+        label: Text(l10n.dashboardAddProduct),
       ),
     );
   }
