@@ -45,12 +45,14 @@ class UserSummary {
   final String username;
   final String email;
   final bool emailVerified;
+  final String preferredLanguage;
 
   UserSummary({
     required this.id,
     required this.username,
     required this.email,
     required this.emailVerified,
+    this.preferredLanguage = 'en',
   });
 
   factory UserSummary.fromJson(Map<String, dynamic> j) => UserSummary(
@@ -58,6 +60,7 @@ class UserSummary {
         username: j['username'] as String,
         email: j['email'] as String,
         emailVerified: j['emailVerified'] as bool,
+        preferredLanguage: (j['preferredLanguage'] as String?) ?? 'en',
       );
 }
 

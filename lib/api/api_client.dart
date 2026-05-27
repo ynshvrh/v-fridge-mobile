@@ -28,6 +28,11 @@ class ApiClient {
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
   );
 
+  /// Language code the client sends as Accept-Language on every request. Owned by
+  /// LocaleController and pushed down on every state change so the chef can pick
+  /// the right cultural prompt even before /auth/me/preferences has been called.
+  String? acceptLanguage;
+
   Future<String?> getAccessToken() => _storage.read(key: _accessKey);
   Future<String?> getRefreshToken() => _storage.read(key: _refreshKey);
 
@@ -84,6 +89,7 @@ class ApiClient {
         extra: {'skipAuth': skipAuth},
         headers: {
           if (fridgeId != null) 'X-Fridge-Id': fridgeId.toString(),
+          if (acceptLanguage != null) 'Accept-Language': acceptLanguage!,
         },
       ),
     );

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/l10n.dart';
 import '../../models/api_models.dart';
+import '../../providers/locale_provider.dart';
 import '../../providers/providers.dart';
 import '../../providers/theme_provider.dart';
 import 'fridges_section.dart';
@@ -15,6 +16,7 @@ class SettingsScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final auth = ref.watch(authControllerProvider);
     final themeMode = ref.watch(themeControllerProvider);
+    final localeOverride = ref.watch(localeControllerProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsTitle)),
@@ -24,6 +26,23 @@ class SettingsScreen extends ConsumerWidget {
           _ProfileCard(auth: auth),
           const SizedBox(height: 16),
           _ThemeCard(mode: themeMode, onChanged: (m) => ref.read(themeControllerProvider.notifier).set(m)),
+          const SizedBox(height: 16),
+          _LanguageCard(
+            localeOverride: localeOverride,
+            onChanged: (locale) async {
+              await ref.read(localeControllerProvider.notifier).set(locale);
+              if (auth.status == AuthStatus.authenticated) {
+                try {
+                  await ref.read(authControllerProvider.notifier)
+                      .updatePreferredLanguage(LocaleController.resolveLanguageCode(locale));
+                } on ApiError catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+                  }
+                }
+              }
+            },
+          ),
           const SizedBox(height: 16),
           const FridgesSection(),
           const SizedBox(height: 16),
@@ -132,6 +151,51 @@ class _ThemeCard extends StatelessWidget {
               ],
               selected: {mode},
               onSelectionChanged: (set) => onChanged(set.first),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LanguageCard extends StatelessWidget {
+  const _LanguageCard({required this.localeOverride, required this.onChanged});
+  final Locale? localeOverride;
+  final ValueChanged<Locale?> onChanged;
+
+  // sentinel used in SegmentedButton.selected; SegmentedButton doesn't allow null values directly.
+  static const Locale _systemSentinel = Locale('__system__');
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final selected = localeOverride ?? _systemSentinel;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.translate_outlined),
+                const SizedBox(width: 8),
+                Text(l10n.settingsLanguage, style: Theme.of(context).textTheme.titleMedium),
+              ],
+            ),
+            const SizedBox(height: 8),
+            SegmentedButton<Locale>(
+              segments: [
+                ButtonSegment(value: _systemSentinel, label: Text(l10n.settingsLanguageAuto)),
+                ButtonSegment(value: const Locale('en'), label: Text(l10n.settingsLanguageEnglish)),
+                ButtonSegment(value: const Locale('uk'), label: Text(l10n.settingsLanguageUkrainian)),
+              ],
+              selected: {selected},
+              onSelectionChanged: (set) {
+                final picked = set.first;
+                onChanged(picked == _systemSentinel ? null : picked);
+              },
             ),
           ],
         ),
