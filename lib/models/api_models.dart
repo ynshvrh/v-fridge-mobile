@@ -46,6 +46,7 @@ class UserSummary {
   final String email;
   final bool emailVerified;
   final String preferredLanguage;
+  final String cuisinePreference;
 
   UserSummary({
     required this.id,
@@ -53,6 +54,7 @@ class UserSummary {
     required this.email,
     required this.emailVerified,
     this.preferredLanguage = 'en',
+    this.cuisinePreference = 'any',
   });
 
   factory UserSummary.fromJson(Map<String, dynamic> j) => UserSummary(
@@ -61,6 +63,7 @@ class UserSummary {
         email: j['email'] as String,
         emailVerified: j['emailVerified'] as bool,
         preferredLanguage: (j['preferredLanguage'] as String?) ?? 'en',
+        cuisinePreference: (j['cuisinePreference'] as String?) ?? 'any',
       );
 }
 

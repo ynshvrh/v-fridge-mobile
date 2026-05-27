@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/l10n.dart';
 import '../../models/api_models.dart';
+import '../../models/cuisines.dart';
 import '../../providers/locale_provider.dart';
 import '../../providers/providers.dart';
 import '../../providers/theme_provider.dart';
@@ -39,6 +40,20 @@ class SettingsScreen extends ConsumerWidget {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
                   }
+                }
+              }
+            },
+          ),
+          const SizedBox(height: 16),
+          _CuisineCard(
+            currentSlug: auth.user?.cuisinePreference ?? Cuisines.any,
+            onChanged: (slug) async {
+              if (auth.status != AuthStatus.authenticated) return;
+              try {
+                await ref.read(authControllerProvider.notifier).updateCuisinePreference(slug);
+              } on ApiError catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
                 }
               }
             },
@@ -195,6 +210,51 @@ class _LanguageCard extends StatelessWidget {
               onSelectionChanged: (set) {
                 final picked = set.first;
                 onChanged(picked == _systemSentinel ? null : picked);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CuisineCard extends StatelessWidget {
+  const _CuisineCard({required this.currentSlug, required this.onChanged});
+  final String currentSlug;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final slug = Cuisines.slugs.contains(currentSlug) ? currentSlug : Cuisines.any;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.local_dining_outlined),
+                const SizedBox(width: 8),
+                Text(l10n.settingsCuisine, style: Theme.of(context).textTheme.titleMedium),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              l10n.settingsCuisineHint,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.outline),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              initialValue: slug,
+              decoration: InputDecoration(labelText: l10n.settingsCuisine),
+              items: Cuisines.slugs
+                  .map((s) => DropdownMenuItem(value: s, child: Text(cuisineLabel(l10n, s))))
+                  .toList(),
+              onChanged: (v) {
+                if (v != null && v != slug) onChanged(v);
               },
             ),
           ],
