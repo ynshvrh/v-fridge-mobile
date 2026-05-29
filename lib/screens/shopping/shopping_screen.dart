@@ -153,7 +153,7 @@ class _ShoppingEmptyState extends StatelessWidget {
               Container(
                 width: 72,
                 height: 72,
-                decoration: BoxDecoration(color: vf.celadon, borderRadius: VfRadius.brXl),
+                decoration: BoxDecoration(color: vf.mistral, borderRadius: VfRadius.brXl),
                 child: Icon(Icons.shopping_basket_outlined, size: 36, color: scheme.onSurface),
               ),
               const SizedBox(height: 16),

@@ -290,7 +290,7 @@ class _PromptCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: VfRadius.brLg,
-        splashColor: vf.celadonSoft,
+        splashColor: vf.zephir,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: Center(
@@ -332,7 +332,7 @@ class _Bubble extends StatelessWidget {
               constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: isAi ? vf.celadonSoft : scheme.primary,
+                color: isAi ? vf.zephir : scheme.primary,
                 borderRadius: VfRadius.brXl,
                 border: Border.all(color: isAi ? scheme.outline : Colors.transparent),
               ),
@@ -348,7 +348,7 @@ class _Bubble extends StatelessWidget {
           ),
           if (!isAi) ...[
             const SizedBox(width: 8),
-            _Avatar(icon: Icons.person, bg: vf.celadon, fg: scheme.onSurface),
+            _Avatar(icon: Icons.person, bg: vf.mistral, fg: scheme.onSurface),
           ],
         ],
       ),
@@ -390,7 +390,7 @@ class _TypingBubble extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: vf.celadonSoft,
+              color: vf.zephir,
               borderRadius: VfRadius.brXl,
               border: Border.all(color: scheme.outline),
             ),

@@ -23,10 +23,10 @@ class VfPalette {
     required this.border,
     required this.input,
     required this.ring,
-    required this.celadon,
-    required this.celadonSoft,
-    required this.violetBrand,
-    required this.violetSoft,
+    required this.mistral,
+    required this.zephir,
+    required this.solara,
+    required this.pulpe,
   });
 
   final Color background;
@@ -47,92 +47,98 @@ class VfPalette {
   final Color border;
   final Color input;
   final Color ring;
-  final Color celadon;
-  final Color celadonSoft;
-  final Color violetBrand;
-  final Color violetSoft;
+
+  /// Brand quartet — citrus splash:
+  ///   mistral → cool sky blue (accent surfaces)
+  ///   zéphir  → soft cream    (secondary surfaces / sidebar wash)
+  ///   solara  → golden orange (lighter brand variant)
+  ///   pulpe   → vibrant orange (primary brand & CTA)
+  final Color mistral;
+  final Color zephir;
+  final Color solara;
+  final Color pulpe;
 
   static const light = VfPalette(
-    background: Color(0xFFFBFCF7),
-    foreground: Color(0xFF2A1E2A),
+    background: Color(0xFFFFFAF0),
+    foreground: Color(0xFF2A1810),
     card: Color(0xFFFFFFFF),
-    cardForeground: Color(0xFF2A1E2A),
-    primary: Color(0xFF8C5383),
+    cardForeground: Color(0xFF2A1810),
+    primary: Color(0xFFFFA43A),
     primaryForeground: Color(0xFFFFFFFF),
-    secondary: Color(0xFFD7E7C3),
-    secondaryForeground: Color(0xFF2A4A1F),
-    muted: Color(0xFFF3F6EC),
-    mutedForeground: Color(0xFF6B5C6B),
-    accent: Color(0xFFECF3DF),
-    accentForeground: Color(0xFF4C2D4A),
-    destructive: Color(0xFFC0392B),
-    success: Color(0xFF4A8B3A),
+    secondary: Color(0xFFFEE4B8),
+    secondaryForeground: Color(0xFF6B3F0C),
+    muted: Color(0xFFFFF6E6),
+    mutedForeground: Color(0xFF8A6B4F),
+    accent: Color(0xFFA3DFF1),
+    accentForeground: Color(0xFF0E3D52),
+    destructive: Color(0xFFE64528),
+    success: Color(0xFF5BAE6F),
     successForeground: Color(0xFFFFFFFF),
-    border: Color(0xFFE5E5D8),
-    input: Color(0xFFE5E5D8),
-    ring: Color(0xFF8C5383),
-    celadon: Color(0xFFD7E7C3),
-    celadonSoft: Color(0xFFECF3DF),
-    violetBrand: Color(0xFF8C5383),
-    violetSoft: Color(0xFFB884B0),
+    border: Color(0xFFF2E1C0),
+    input: Color(0xFFF2E1C0),
+    ring: Color(0xFFFFA43A),
+    mistral: Color(0xFFA3DFF1),
+    zephir: Color(0xFFFEE4B8),
+    solara: Color(0xFFFFC065),
+    pulpe: Color(0xFFFFA43A),
   );
 
   static const dark = VfPalette(
-    background: Color(0xFF1A121A),
-    foreground: Color(0xFFECF3DF),
-    card: Color(0xFF241A24),
-    cardForeground: Color(0xFFECF3DF),
-    primary: Color(0xFFB884B0),
-    primaryForeground: Color(0xFF1A121A),
-    secondary: Color(0xFF3D4A33),
-    secondaryForeground: Color(0xFFECF3DF),
-    muted: Color(0xFF2E232E),
-    mutedForeground: Color(0xFFB5A9B5),
-    accent: Color(0xFF3D2F3B),
-    accentForeground: Color(0xFFECF3DF),
-    destructive: Color(0xFFE55B4B),
-    success: Color(0xFF7CB36A),
-    successForeground: Color(0xFF1A121A),
-    border: Color(0x1AECF3DF),
-    input: Color(0x26ECF3DF),
-    ring: Color(0xFFB884B0),
-    celadon: Color(0xFFB5C9A1),
-    celadonSoft: Color(0xFF3D4A33),
-    violetBrand: Color(0xFFB884B0),
-    violetSoft: Color(0xFF6B3F65),
+    background: Color(0xFF1A1006),
+    foreground: Color(0xFFFFF1DE),
+    card: Color(0xFF261810),
+    cardForeground: Color(0xFFFFF1DE),
+    primary: Color(0xFFFFB85C),
+    primaryForeground: Color(0xFF1A1006),
+    secondary: Color(0xFF4D3D24),
+    secondaryForeground: Color(0xFFFFF1DE),
+    muted: Color(0xFF2E2014),
+    mutedForeground: Color(0xFFC2A88A),
+    accent: Color(0xFF7CC0D8),
+    accentForeground: Color(0xFF0E2A3A),
+    destructive: Color(0xFFFF6240),
+    success: Color(0xFF7BC18A),
+    successForeground: Color(0xFF1A1006),
+    border: Color(0x1AFFF1DE),
+    input: Color(0x26FFF1DE),
+    ring: Color(0xFFFFB85C),
+    mistral: Color(0xFF7CC0D8),
+    zephir: Color(0xFF4D3D24),
+    solara: Color(0xFFFFD089),
+    pulpe: Color(0xFFFFB85C),
   );
 }
 
 /// Exposes the V-Fridge palette through the standard ThemeExtension lookup so
-/// widgets can grab brand-only colors (celadon, success, etc.) without
+/// widgets can grab brand-only colors (mistral, zéphir, success, etc.) without
 /// duplicating the constants. Material's ColorScheme stays the primary source
 /// for primary/secondary/surface — only the extras live here.
 class VfColors extends ThemeExtension<VfColors> {
   const VfColors({
-    required this.celadon,
-    required this.celadonSoft,
-    required this.violetBrand,
-    required this.violetSoft,
+    required this.mistral,
+    required this.zephir,
+    required this.solara,
+    required this.pulpe,
     required this.success,
     required this.successForeground,
     required this.mutedForeground,
     required this.accentForeground,
   });
 
-  final Color celadon;
-  final Color celadonSoft;
-  final Color violetBrand;
-  final Color violetSoft;
+  final Color mistral;
+  final Color zephir;
+  final Color solara;
+  final Color pulpe;
   final Color success;
   final Color successForeground;
   final Color mutedForeground;
   final Color accentForeground;
 
   static VfColors fromPalette(VfPalette p) => VfColors(
-        celadon: p.celadon,
-        celadonSoft: p.celadonSoft,
-        violetBrand: p.violetBrand,
-        violetSoft: p.violetSoft,
+        mistral: p.mistral,
+        zephir: p.zephir,
+        solara: p.solara,
+        pulpe: p.pulpe,
         success: p.success,
         successForeground: p.successForeground,
         mutedForeground: p.mutedForeground,
@@ -141,20 +147,20 @@ class VfColors extends ThemeExtension<VfColors> {
 
   @override
   VfColors copyWith({
-    Color? celadon,
-    Color? celadonSoft,
-    Color? violetBrand,
-    Color? violetSoft,
+    Color? mistral,
+    Color? zephir,
+    Color? solara,
+    Color? pulpe,
     Color? success,
     Color? successForeground,
     Color? mutedForeground,
     Color? accentForeground,
   }) =>
       VfColors(
-        celadon: celadon ?? this.celadon,
-        celadonSoft: celadonSoft ?? this.celadonSoft,
-        violetBrand: violetBrand ?? this.violetBrand,
-        violetSoft: violetSoft ?? this.violetSoft,
+        mistral: mistral ?? this.mistral,
+        zephir: zephir ?? this.zephir,
+        solara: solara ?? this.solara,
+        pulpe: pulpe ?? this.pulpe,
         success: success ?? this.success,
         successForeground: successForeground ?? this.successForeground,
         mutedForeground: mutedForeground ?? this.mutedForeground,
@@ -165,10 +171,10 @@ class VfColors extends ThemeExtension<VfColors> {
   VfColors lerp(ThemeExtension<VfColors>? other, double t) {
     if (other is! VfColors) return this;
     return VfColors(
-      celadon: Color.lerp(celadon, other.celadon, t)!,
-      celadonSoft: Color.lerp(celadonSoft, other.celadonSoft, t)!,
-      violetBrand: Color.lerp(violetBrand, other.violetBrand, t)!,
-      violetSoft: Color.lerp(violetSoft, other.violetSoft, t)!,
+      mistral: Color.lerp(mistral, other.mistral, t)!,
+      zephir: Color.lerp(zephir, other.zephir, t)!,
+      solara: Color.lerp(solara, other.solara, t)!,
+      pulpe: Color.lerp(pulpe, other.pulpe, t)!,
       success: Color.lerp(success, other.success, t)!,
       successForeground: Color.lerp(successForeground, other.successForeground, t)!,
       mutedForeground: Color.lerp(mutedForeground, other.mutedForeground, t)!,

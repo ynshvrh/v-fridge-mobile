@@ -76,7 +76,7 @@ class _Chip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: vf.celadonSoft,
+          color: vf.zephir,
           borderRadius: VfRadius.brXl,
           border: Border.all(color: Theme.of(context).colorScheme.outline),
         ),
@@ -123,7 +123,7 @@ class ActiveFridgeBanner extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: vf.celadonSoft,
+          color: vf.zephir,
           borderRadius: VfRadius.brLg,
           border: Border.all(color: Theme.of(context).colorScheme.outline),
         ),
