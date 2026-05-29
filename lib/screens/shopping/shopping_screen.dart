@@ -7,7 +7,9 @@ import '../../providers/fridge_provider.dart';
 import '../../providers/providers.dart';
 import '../../theme/vf_colors.dart';
 import '../../theme/vf_radius.dart';
+import '../../widgets/animated_press.dart';
 import '../../widgets/fridge_switcher.dart';
+import '../../widgets/staggered_entry.dart';
 
 class ShoppingScreen extends ConsumerStatefulWidget {
   const ShoppingScreen({super.key});
@@ -93,6 +95,7 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
     final unchecked = _items.where((i) => !i.checked).toList();
     final checked = _items.where((i) => i.checked).toList();
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(l10n.shoppingTitle),
         actions: const [FridgeSwitcher()],
@@ -107,19 +110,48 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
                     ? _ShoppingEmptyState(message: l10n.shoppingEmpty)
                     : RefreshIndicator(
                         onRefresh: _load,
-                        child: ListView(
-                          padding: const EdgeInsets.all(8),
-                          children: [
-                            if (unchecked.isNotEmpty) ...[
-                              _SectionHeader(label: l10n.shoppingToBuy),
-                              ...unchecked.map((i) => _Tile(item: i, onToggle: () => _toggle(i), onDelete: () => _delete(i), onPurchase: () => _purchase(i))),
-                            ],
-                            if (checked.isNotEmpty) ...[
-                              _SectionHeader(label: l10n.shoppingGotThem),
-                              ...checked.map((i) => _Tile(item: i, onToggle: () => _toggle(i), onDelete: () => _delete(i), onPurchase: () => _purchase(i))),
-                            ],
-                          ],
-                        ),
+                        child: Builder(builder: (_) {
+                          // Flatten the two sections into a single list of
+                          // (index, widget) entries so the stagger cascade
+                          // crosses the header → unchecked → header → checked
+                          // boundary instead of resetting at each section.
+                          final entries = <Widget>[];
+                          var idx = 0;
+                          Widget wrap(Widget w) =>
+                              StaggeredEntry(index: idx++, child: w);
+                          if (unchecked.isNotEmpty) {
+                            entries.add(wrap(_SectionHeader(label: l10n.shoppingToBuy)));
+                            for (final i in unchecked) {
+                              entries.add(wrap(AnimatedPress(
+                                onTap: () => _toggle(i),
+                                child: _Tile(
+                                  item: i,
+                                  onToggle: () => _toggle(i),
+                                  onDelete: () => _delete(i),
+                                  onPurchase: () => _purchase(i),
+                                ),
+                              )));
+                            }
+                          }
+                          if (checked.isNotEmpty) {
+                            entries.add(wrap(_SectionHeader(label: l10n.shoppingGotThem)));
+                            for (final i in checked) {
+                              entries.add(wrap(AnimatedPress(
+                                onTap: () => _toggle(i),
+                                child: _Tile(
+                                  item: i,
+                                  onToggle: () => _toggle(i),
+                                  onDelete: () => _delete(i),
+                                  onPurchase: () => _purchase(i),
+                                ),
+                              )));
+                            }
+                          }
+                          return ListView(
+                            padding: const EdgeInsets.all(8),
+                            children: entries,
+                          );
+                        }),
                       ),
           ),
         ],

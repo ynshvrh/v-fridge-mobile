@@ -7,6 +7,7 @@ import '../../models/cuisines.dart';
 import '../../providers/locale_provider.dart';
 import '../../providers/providers.dart';
 import '../../providers/theme_provider.dart';
+import '../../widgets/staggered_entry.dart';
 import 'fridges_section.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -20,66 +21,79 @@ class SettingsScreen extends ConsumerWidget {
     final localeOverride = ref.watch(localeControllerProvider);
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: Text(l10n.settingsTitle)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _ProfileCard(auth: auth),
+          StaggeredEntry(index: 0, child: _ProfileCard(auth: auth)),
           const SizedBox(height: 16),
-          _ThemeCard(mode: themeMode, onChanged: (m) => ref.read(themeControllerProvider.notifier).set(m)),
+          StaggeredEntry(
+            index: 1,
+            child: _ThemeCard(mode: themeMode, onChanged: (m) => ref.read(themeControllerProvider.notifier).set(m)),
+          ),
           const SizedBox(height: 16),
-          _LanguageCard(
-            localeOverride: localeOverride,
-            onChanged: (locale) async {
-              await ref.read(localeControllerProvider.notifier).set(locale);
-              if (auth.status == AuthStatus.authenticated) {
+          StaggeredEntry(
+            index: 2,
+            child: _LanguageCard(
+              localeOverride: localeOverride,
+              onChanged: (locale) async {
+                await ref.read(localeControllerProvider.notifier).set(locale);
+                if (auth.status == AuthStatus.authenticated) {
+                  try {
+                    await ref.read(authControllerProvider.notifier)
+                        .updatePreferredLanguage(LocaleController.resolveLanguageCode(locale));
+                  } on ApiError catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+                    }
+                  }
+                }
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
+          StaggeredEntry(
+            index: 3,
+            child: _CuisineCard(
+              currentSlug: auth.user?.cuisinePreference ?? Cuisines.any,
+              onChanged: (slug) async {
+                if (auth.status != AuthStatus.authenticated) return;
                 try {
-                  await ref.read(authControllerProvider.notifier)
-                      .updatePreferredLanguage(LocaleController.resolveLanguageCode(locale));
+                  await ref.read(authControllerProvider.notifier).updateCuisinePreference(slug);
                 } on ApiError catch (e) {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
                   }
                 }
-              }
-            },
-          ),
-          const SizedBox(height: 16),
-          _CuisineCard(
-            currentSlug: auth.user?.cuisinePreference ?? Cuisines.any,
-            onChanged: (slug) async {
-              if (auth.status != AuthStatus.authenticated) return;
-              try {
-                await ref.read(authControllerProvider.notifier).updateCuisinePreference(slug);
-              } on ApiError catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
-                }
-              }
-            },
-          ),
-          const SizedBox(height: 16),
-          const FridgesSection(),
-          const SizedBox(height: 16),
-          _DangerZone(ref: ref),
-          const SizedBox(height: 16),
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.logout),
-              title: Text(l10n.settingsSignOut),
-              onTap: () async {
-                final ok = await showDialog<bool>(
-                  context: context,
-                  builder: (ctx) => AlertDialog(
-                    title: Text(l10n.settingsSignOutConfirm),
-                    actions: [
-                      TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.actionCancel)),
-                      FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.settingsSignOut)),
-                    ],
-                  ),
-                );
-                if (ok == true) await ref.read(authControllerProvider.notifier).logout();
               },
+            ),
+          ),
+          const SizedBox(height: 16),
+          const StaggeredEntry(index: 4, child: FridgesSection()),
+          const SizedBox(height: 16),
+          StaggeredEntry(index: 5, child: _DangerZone(ref: ref)),
+          const SizedBox(height: 16),
+          StaggeredEntry(
+            index: 6,
+            child: Card(
+              child: ListTile(
+                leading: const Icon(Icons.logout),
+                title: Text(l10n.settingsSignOut),
+                onTap: () async {
+                  final ok = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: Text(l10n.settingsSignOutConfirm),
+                      actions: [
+                        TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.actionCancel)),
+                        FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.settingsSignOut)),
+                      ],
+                    ),
+                  );
+                  if (ok == true) await ref.read(authControllerProvider.notifier).logout();
+                },
+              ),
             ),
           ),
         ],

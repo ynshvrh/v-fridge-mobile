@@ -38,6 +38,7 @@ dependencies:
 
   # Barcode scanner (camera + ML-Kit on Android, AVFoundation on iOS)
   mobile_scanner: ^5.2.3
+  flutter_animate: ^4.5.2
 
 dev_dependencies:
   flutter_test:

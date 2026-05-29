@@ -8,6 +8,7 @@ import '../../providers/providers.dart';
 import '../../theme/vf_colors.dart';
 import '../../theme/vf_radius.dart';
 import '../../widgets/fridge_switcher.dart';
+import '../../widgets/staggered_entry.dart';
 
 const _dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -125,6 +126,7 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
     final plan = _plan;
     final meals = plan == null ? <Meal>[] : ([...plan.meals]..sort((a, b) => _dayOrder.indexOf(a.day).compareTo(_dayOrder.indexOf(b.day))));
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(l10n.plannerTitle),
         actions: [
@@ -149,21 +151,24 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                ...meals.map((m) => Card(
+                for (var idx = 0; idx < meals.length; idx++)
+                  StaggeredEntry(
+                    index: idx,
+                    child: Card(
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(plannerDayLabel(l10n, m.day).toUpperCase(), style: Theme.of(context).textTheme.labelSmall?.copyWith(letterSpacing: 1.5, color: Theme.of(context).colorScheme.outline)),
+                            Text(plannerDayLabel(l10n, meals[idx].day).toUpperCase(), style: Theme.of(context).textTheme.labelSmall?.copyWith(letterSpacing: 1.5, color: Theme.of(context).colorScheme.outline)),
                             const SizedBox(height: 4),
-                            Text(m.name, style: Theme.of(context).textTheme.titleMedium),
-                            if (m.note != null && m.note!.isNotEmpty) ...[
+                            Text(meals[idx].name, style: Theme.of(context).textTheme.titleMedium),
+                            if (meals[idx].note != null && meals[idx].note!.isNotEmpty) ...[
                               const SizedBox(height: 4),
-                              Text(m.note!, style: TextStyle(fontStyle: FontStyle.italic, color: Theme.of(context).colorScheme.outline)),
+                              Text(meals[idx].note!, style: TextStyle(fontStyle: FontStyle.italic, color: Theme.of(context).colorScheme.outline)),
                             ],
                             const Divider(height: 24),
-                            ...m.ingredients.map((i) => Padding(padding: const EdgeInsets.symmetric(vertical: 2), child: Text('• $i'))),
+                            ...meals[idx].ingredients.map((i) => Padding(padding: const EdgeInsets.symmetric(vertical: 2), child: Text('• $i'))),
                           ],
                         ),
                       ),

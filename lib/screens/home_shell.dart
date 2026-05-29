@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/l10n.dart';
+import '../widgets/ambient_background.dart';
 import '../widgets/fridge_switcher.dart';
 import 'chat/chat_screen.dart';
 import 'dashboard/dashboard_screen.dart';
@@ -37,7 +38,9 @@ class _HomeShellState extends ConsumerState<HomeShell> {
               actions: const [FridgeSwitcher()],
             )
           : null, // child screens manage their own AppBars
-      body: IndexedStack(index: _index, children: _screens),
+      body: AmbientBackground(
+        child: IndexedStack(index: _index, children: _screens),
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: (i) => setState(() => _index = i),

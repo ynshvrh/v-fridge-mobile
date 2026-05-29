@@ -195,5 +195,45 @@ ThemeData _buildTheme(VfPalette p, Brightness brightness) {
     ),
 
     dividerTheme: DividerThemeData(color: p.border, space: 1, thickness: 1),
+
+    // Soft fade-through-slide for navigation pushes on both platforms — the
+    // default Material/Cupertino transitions feel mechanical against the rest
+    // of the ambient motion.
+    pageTransitionsTheme: const PageTransitionsTheme(
+      builders: <TargetPlatform, PageTransitionsBuilder>{
+        TargetPlatform.android: _VfPageTransitionsBuilder(),
+        TargetPlatform.iOS:     _VfPageTransitionsBuilder(),
+        TargetPlatform.linux:   _VfPageTransitionsBuilder(),
+        TargetPlatform.macOS:   _VfPageTransitionsBuilder(),
+        TargetPlatform.windows: _VfPageTransitionsBuilder(),
+      },
+    ),
   );
+}
+
+/// Light slide + fade for page pushes. Curved with `easeOutCubic` so motion
+/// settles instead of snapping.
+class _VfPageTransitionsBuilder extends PageTransitionsBuilder {
+  const _VfPageTransitionsBuilder();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+    return FadeTransition(
+      opacity: curved,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.04),
+          end: Offset.zero,
+        ).animate(curved),
+        child: child,
+      ),
+    );
+  }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/l10n.dart';
@@ -106,6 +107,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: _ChatAppBar(onClear: _messages.isEmpty ? null : _clear),
       body: Column(
         children: [
@@ -352,7 +354,16 @@ class _Bubble extends StatelessWidget {
           ],
         ],
       ),
-    );
+    )
+        // Newly mounted bubbles slide in from the speaker's side and fade up.
+        .animate()
+        .fadeIn(duration: 220.ms, curve: Curves.easeOut)
+        .slideX(
+          begin: isAi ? -0.06 : 0.06,
+          end: 0,
+          duration: 260.ms,
+          curve: Curves.easeOutCubic,
+        );
   }
 }
 
@@ -405,6 +416,17 @@ class _TypingBubble extends StatelessWidget {
           ),
         ],
       ),
-    );
+    )
+        // Fade in like a regular bubble, then breathe gently so the "thinking"
+        // state reads as alive rather than just a spinner sitting there.
+        .animate(onPlay: (c) => c.repeat(reverse: true))
+        .fadeIn(duration: 220.ms, curve: Curves.easeOut)
+        .then()
+        .scaleXY(
+          begin: 1,
+          end: 1.02,
+          duration: 1200.ms,
+          curve: Curves.easeInOut,
+        );
   }
 }

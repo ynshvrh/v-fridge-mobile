@@ -8,7 +8,9 @@ import '../../providers/fridge_provider.dart';
 import '../../providers/providers.dart';
 import '../../theme/vf_colors.dart';
 import '../../theme/vf_radius.dart';
+import '../../widgets/animated_press.dart';
 import '../../widgets/fridge_switcher.dart';
+import '../../widgets/staggered_entry.dart';
 import 'add_product_sheet.dart';
 import 'analytics_tile.dart';
 
@@ -92,6 +94,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       if (prev != next) _reload();
     });
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: Column(
         children: [
           ActiveFridgeBanner(icon: Icons.kitchen_outlined, label: l10n.dashboardActiveFor),
@@ -114,16 +117,27 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     padding: const EdgeInsets.only(top: 8, bottom: 80),
                     itemCount: products.length + 1,
                     itemBuilder: (_, i) {
-                      if (i == 0) return const AnalyticsTile();
+                      if (i == 0) {
+                        return const StaggeredEntry(
+                          index: 0,
+                          child: AnalyticsTile(),
+                        );
+                      }
                       final p = products[i - 1];
-                      return Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-                        child: _ProductTile(
-                          product: p,
-                          onTap: () => _edit(p),
-                          onEdit: () => _edit(p),
-                          onDelete: () => _delete(p),
-                          onConsume: () => _consume(p),
+                      return StaggeredEntry(
+                        index: i,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+                          child: AnimatedPress(
+                            onTap: () => _edit(p),
+                            child: _ProductTile(
+                              product: p,
+                              onTap: () => _edit(p),
+                              onEdit: () => _edit(p),
+                              onDelete: () => _delete(p),
+                              onConsume: () => _consume(p),
+                            ),
+                          ),
                         ),
                       );
                     },

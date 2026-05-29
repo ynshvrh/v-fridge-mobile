@@ -87,10 +87,30 @@ class _Chip extends StatelessWidget {
             const SizedBox(width: 6),
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 140),
-              child: Text(
-                name,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w700),
+              // Soft cross-fade + slide when the user picks a different fridge,
+              // so the swap reads like a tab change instead of a hard rewrite.
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 240),
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeIn,
+                transitionBuilder: (child, animation) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0, 0.25),
+                        end: Offset.zero,
+                      ).animate(animation),
+                      child: child,
+                    ),
+                  );
+                },
+                child: Text(
+                  name,
+                  key: ValueKey(name),
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
               ),
             ),
             if (onTap != null) ...[
@@ -132,13 +152,20 @@ class ActiveFridgeBanner extends ConsumerWidget {
             Icon(icon, size: 16, color: vf.accentForeground),
             const SizedBox(width: 8),
             Expanded(
-              child: Text.rich(
-                TextSpan(children: [
-                  TextSpan(text: '$label '),
-                  TextSpan(text: fridge.name, style: const TextStyle(fontWeight: FontWeight.w700)),
-                ]),
-                style: TextStyle(color: vf.accentForeground),
-                overflow: TextOverflow.ellipsis,
+              // Cross-fade the banner when the active fridge changes so the
+              // screen header reacts to the switch instead of jumping.
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 240),
+                switchInCurve: Curves.easeOutCubic,
+                child: Text.rich(
+                  key: ValueKey(fridge.id),
+                  TextSpan(children: [
+                    TextSpan(text: '$label '),
+                    TextSpan(text: fridge.name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  ]),
+                  style: TextStyle(color: vf.accentForeground),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ),
           ],
