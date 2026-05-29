@@ -18,8 +18,8 @@ class AuthService {
         'username': username,
         'email': email,
         'password': password,
-        if (preferredLanguage != null) 'preferredLanguage': preferredLanguage,
-        if (cuisinePreference != null) 'cuisinePreference': cuisinePreference,
+        'preferredLanguage': ?preferredLanguage,
+        'cuisinePreference': ?cuisinePreference,
       },
       skipAuth: true,
     );
@@ -34,8 +34,8 @@ class AuthService {
     final data = await _api.patch<Map<String, dynamic>>(
       '/auth/me/preferences',
       body: {
-        if (preferredLanguage != null) 'preferredLanguage': preferredLanguage,
-        if (cuisinePreference != null) 'cuisinePreference': cuisinePreference,
+        'preferredLanguage': ?preferredLanguage,
+        'cuisinePreference': ?cuisinePreference,
       },
     );
     return UserSummary.fromJson(data);
@@ -112,7 +112,7 @@ class ProductsService {
   }) async {
     final data = await _api.post<Map<String, dynamic>>('/products', body: {
       'name': name,
-      if (description != null) 'description': description,
+      'description': ?description,
       'quantity': quantity,
       'unit': unit,
       if (expiryDate != null) 'expiryDate': formatDate(expiryDate),
@@ -134,13 +134,13 @@ class ProductsService {
     String? category,
   }) async {
     final body = <String, dynamic>{
-      if (name != null) 'name': name,
-      if (description != null) 'description': description,
-      if (quantity != null) 'quantity': quantity,
-      if (unit != null) 'unit': unit,
+      'name': ?name,
+      'description': ?description,
+      'quantity': ?quantity,
+      'unit': ?unit,
       if (expiryDate != null) 'expiryDate': formatDate(expiryDate),
       if (clearExpiry && expiryDate == null) 'expiryDate': null,
-      if (category != null) 'category': category,
+      'category': ?category,
     };
     final data = await _api.patch<Map<String, dynamic>>('/products/$id', body: body);
     // The PATCH endpoint returns the updated product on a normal edit, OR `{success: true,
@@ -205,8 +205,8 @@ class ShoppingService {
   }) async {
     final data = await _api.post<Map<String, dynamic>>('/shopping', body: {
       'name': name,
-      if (quantity != null) 'quantity': quantity,
-      if (unit != null) 'unit': unit,
+      'quantity': ?quantity,
+      'unit': ?unit,
       'category': category,
     });
     return ShoppingItem.fromJson(data);
@@ -214,8 +214,8 @@ class ShoppingService {
 
   Future<ShoppingItem> patch(int id, {bool? checked, String? category}) async {
     final data = await _api.patch<Map<String, dynamic>>('/shopping/$id', body: {
-      if (checked != null) 'checked': checked,
-      if (category != null) 'category': category,
+      'checked': ?checked,
+      'category': ?category,
     });
     return ShoppingItem.fromJson(data);
   }

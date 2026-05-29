@@ -89,7 +89,7 @@ class ApiClient {
         extra: {'skipAuth': skipAuth},
         headers: {
           if (fridgeId != null) 'X-Fridge-Id': fridgeId.toString(),
-          if (acceptLanguage != null) 'Accept-Language': acceptLanguage!,
+          'Accept-Language': ?acceptLanguage,
         },
       ),
     );
