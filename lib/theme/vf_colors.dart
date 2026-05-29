@@ -48,11 +48,14 @@ class VfPalette {
   final Color input;
   final Color ring;
 
-  /// Brand quartet — citrus splash:
-  ///   mistral → cool sky blue (accent surfaces)
-  ///   zéphir  → soft cream    (secondary surfaces / sidebar wash)
-  ///   solara  → golden orange (lighter brand variant)
-  ///   pulpe   → vibrant orange (primary brand & CTA)
+  /// Brand quartet — citrus splash v2 (Pulpe-led, juicier):
+  ///   mistral → cool sky blue   (accent surfaces, charts cool tone)
+  ///   zéphir  → soft cream      (secondary surfaces / sidebar wash in light;
+  ///                              desaturated cool slate in dark)
+  ///   solara  → golden honey    (soft brand secondary, FAB glow)
+  ///   pulpe   → punchy tangerine (primary brand & CTA)
+  /// Dark theme keeps the same Pulpe hue but bumps it slightly so it reads
+  /// as a neon-citrus pop against the midnight-navy field.
   final Color mistral;
   final Color zephir;
   final Color solara;
@@ -63,49 +66,49 @@ class VfPalette {
     foreground: Color(0xFF2A1810),
     card: Color(0xFFFFFFFF),
     cardForeground: Color(0xFF2A1810),
-    primary: Color(0xFFFFA43A),
+    primary: Color(0xFFFF8A1F),
     primaryForeground: Color(0xFFFFFFFF),
-    secondary: Color(0xFFFEE4B8),
-    secondaryForeground: Color(0xFF6B3F0C),
+    secondary: Color(0xFFFFE0AA),
+    secondaryForeground: Color(0xFF5C3506),
     muted: Color(0xFFFFF6E6),
     mutedForeground: Color(0xFF8A6B4F),
-    accent: Color(0xFFA3DFF1),
-    accentForeground: Color(0xFF0E3D52),
+    accent: Color(0xFF67CEEA),
+    accentForeground: Color(0xFF07344B),
     destructive: Color(0xFFE64528),
-    success: Color(0xFF5BAE6F),
+    success: Color(0xFF4FA866),
     successForeground: Color(0xFFFFFFFF),
-    border: Color(0xFFF2E1C0),
-    input: Color(0xFFF2E1C0),
-    ring: Color(0xFFFFA43A),
-    mistral: Color(0xFFA3DFF1),
-    zephir: Color(0xFFFEE4B8),
+    border: Color(0xFFF2D9A8),
+    input: Color(0xFFF2D9A8),
+    ring: Color(0xFFFF8A1F),
+    mistral: Color(0xFF67CEEA),
+    zephir: Color(0xFFFFE0AA),
     solara: Color(0xFFFFC065),
-    pulpe: Color(0xFFFFA43A),
+    pulpe: Color(0xFFFF8A1F),
   );
 
   static const dark = VfPalette(
-    background: Color(0xFF1A1006),
-    foreground: Color(0xFFFFF1DE),
-    card: Color(0xFF261810),
-    cardForeground: Color(0xFFFFF1DE),
-    primary: Color(0xFFFFB85C),
-    primaryForeground: Color(0xFF1A1006),
-    secondary: Color(0xFF4D3D24),
-    secondaryForeground: Color(0xFFFFF1DE),
-    muted: Color(0xFF2E2014),
-    mutedForeground: Color(0xFFC2A88A),
-    accent: Color(0xFF7CC0D8),
-    accentForeground: Color(0xFF0E2A3A),
-    destructive: Color(0xFFFF6240),
-    success: Color(0xFF7BC18A),
-    successForeground: Color(0xFF1A1006),
-    border: Color(0x1AFFF1DE),
-    input: Color(0x26FFF1DE),
-    ring: Color(0xFFFFB85C),
-    mistral: Color(0xFF7CC0D8),
-    zephir: Color(0xFF4D3D24),
+    background: Color(0xFF0C141E),
+    foreground: Color(0xFFE8EEF4),
+    card: Color(0xFF131C28),
+    cardForeground: Color(0xFFE8EEF4),
+    primary: Color(0xFFFF9A33),
+    primaryForeground: Color(0xFF0C141E),
+    secondary: Color(0xFF1F2A38),
+    secondaryForeground: Color(0xFFE8EEF4),
+    muted: Color(0xFF18222F),
+    mutedForeground: Color(0xFF8FA3B8),
+    accent: Color(0xFF67CEEA),
+    accentForeground: Color(0xFF062236),
+    destructive: Color(0xFFFF6A4A),
+    success: Color(0xFF6FDC9C),
+    successForeground: Color(0xFF062236),
+    border: Color(0x14E8EEF4),
+    input: Color(0x1FE8EEF4),
+    ring: Color(0xFFFF9A33),
+    mistral: Color(0xFF67CEEA),
+    zephir: Color(0xFF2A2F3B),
     solara: Color(0xFFFFD089),
-    pulpe: Color(0xFFFFB85C),
+    pulpe: Color(0xFFFF9A33),
   );
 }
 

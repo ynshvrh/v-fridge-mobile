@@ -4,9 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'vf_colors.dart';
 import 'vf_radius.dart';
 
-/// Builds a Material 3 [ThemeData] aligned with the web client's mistral + violet
-/// palette and radius scale. See `web-platform/app/globals.css` for the source
-/// of truth and keep both in sync.
+/// Builds a Material 3 [ThemeData] aligned with the web client's citrus palette
+/// and radius scale. See `web-platform/app/globals.css` for the source of truth
+/// and keep both in sync.
 ThemeData vfLightTheme() => _buildTheme(VfPalette.light, Brightness.light);
 
 ThemeData vfDarkTheme() => _buildTheme(VfPalette.dark, Brightness.dark);
@@ -27,7 +27,10 @@ ThemeData _buildTheme(VfPalette p, Brightness brightness) {
     surfaceContainerLowest: p.background,
     surfaceContainerLow: p.muted,
     surfaceContainer: p.muted,
-    surfaceContainerHigh: p.accent,
+    // Raised internal surfaces stay neutral — using `accent` (Mistral blue)
+    // here paints menus/tooltips bright cyan in both themes, which fights
+    // the brand. The Mistral pop is reserved for explicit accent moments.
+    surfaceContainerHigh: p.card,
     surfaceContainerHighest: p.zephir,
     outline: p.border,
     outlineVariant: p.muted,
@@ -156,16 +159,18 @@ ThemeData _buildTheme(VfPalette p, Brightness brightness) {
       surfaceTintColor: Colors.transparent,
       indicatorColor: p.mistral,
       indicatorShape: const RoundedRectangleBorder(borderRadius: VfRadius.brLg),
+      // Selected label/icon sit on the Mistral indicator pill, so use the
+      // accent-foreground (deep navy) for high contrast in both themes.
       labelTextStyle: WidgetStateProperty.resolveWith(
         (states) => TextStyle(
-          color: states.contains(WidgetState.selected) ? p.secondaryForeground : p.mutedForeground,
+          color: states.contains(WidgetState.selected) ? p.accentForeground : p.mutedForeground,
           fontWeight: states.contains(WidgetState.selected) ? FontWeight.w700 : FontWeight.w500,
           fontSize: 12,
         ),
       ),
       iconTheme: WidgetStateProperty.resolveWith(
         (states) => IconThemeData(
-          color: states.contains(WidgetState.selected) ? p.secondaryForeground : p.mutedForeground,
+          color: states.contains(WidgetState.selected) ? p.accentForeground : p.mutedForeground,
         ),
       ),
     ),
