@@ -152,14 +152,18 @@ class ShoppingItem {
 class MealPlan {
   final List<Meal> meals;
   final List<MealPlanGap> gapItems;
+  final DateTime? generatedAt;
 
-  MealPlan({required this.meals, required this.gapItems});
+  MealPlan({required this.meals, required this.gapItems, this.generatedAt});
 
   factory MealPlan.fromJson(Map<String, dynamic> j) => MealPlan(
         meals: (j['meals'] as List).map((m) => Meal.fromJson(m as Map<String, dynamic>)).toList(),
         gapItems: (j['gapItems'] as List)
             .map((g) => MealPlanGap.fromJson(g as Map<String, dynamic>))
             .toList(),
+        generatedAt: j['generatedAt'] is String
+            ? DateTime.tryParse(j['generatedAt'] as String)
+            : null,
       );
 }
 

@@ -85,6 +85,23 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
   bool _importing = false;
   String? _error;
 
+  @override
+  void initState() {
+    super.initState();
+    // Pull the persisted plan for the active fridge so the screen restores
+    // instantly on revisit — no LLM round-trip unless the user asks for it.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadCached());
+  }
+
+  Future<void> _loadCached() async {
+    try {
+      final cached = await ref.read(plannerServiceProvider).fetchCached();
+      if (mounted) setState(() => _plan = cached);
+    } on ApiError catch (e) {
+      if (mounted) setState(() => _error = e.message);
+    }
+  }
+
   Future<void> _generate() async {
     setState(() { _loading = true; _error = null; });
     try {
@@ -118,10 +135,14 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    // Clear the current plan when the user switches fridges — the meals only make
-    // sense for the inventory that produced them.
+    // Each fridge has its own cached plan; reload when the active one flips so
+    // the user lands on the right meals (or the empty state if nothing was
+    // generated for the new fridge yet).
     ref.listen<int?>(activeFridgeIdProvider, (prev, next) {
-      if (prev != next && mounted) setState(() => _plan = null);
+      if (prev != next && mounted) {
+        setState(() { _plan = null; _error = null; });
+        _loadCached();
+      }
     });
     final plan = _plan;
     final meals = plan == null ? <Meal>[] : ([...plan.meals]..sort((a, b) => _dayOrder.indexOf(a.day).compareTo(_dayOrder.indexOf(b.day))));

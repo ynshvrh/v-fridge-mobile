@@ -235,9 +235,20 @@ class PlannerService {
   PlannerService(this._api);
   final ApiClient _api;
 
+  /// Hits POST /meal-plan to ask the LLM for a fresh plan and upsert the
+  /// cached row server-side. Use this only when the user explicitly asks for
+  /// (re)generation — otherwise call [fetchCached] to restore the existing
+  /// plan without burning a chat-rate-limit credit.
   Future<MealPlan> generate() async {
     final data = await _api.post<Map<String, dynamic>>('/meal-plan', body: {});
     return MealPlan.fromJson(data);
+  }
+
+  /// Returns the active fridge's persisted plan if one was ever generated.
+  /// Resolves to null when the server replies 204 No Content (no plan yet).
+  Future<MealPlan?> fetchCached() async {
+    final data = await _api.get<Map<String, dynamic>?>('/meal-plan');
+    return data == null ? null : MealPlan.fromJson(data);
   }
 
   Future<({int created, int skipped})> importGaps(List<MealPlanGap> items) async {
