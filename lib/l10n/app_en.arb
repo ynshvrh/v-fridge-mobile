@@ -180,6 +180,9 @@
   "fridgesMenuDelete": "Delete",
   "fridgesMenuLeave": "Leave",
   "fridgesActiveHint": "Use the switcher in the top bar to change the active fridge. Shared fridges show up here once you accept an invite.",
+  "fridgesNoneTitle": "No fridges yet",
+  "fridgesNoneBody": "Create your first fridge to start tracking groceries.",
+  "fridgesNoneCta": "Create fridge",
 
   "analyticsMostWasted": "Most wasted",
   "analyticsMostWastedSubtitle": "Last 30 days",
