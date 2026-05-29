@@ -524,6 +524,16 @@ class AppLocalizationsUk extends AppLocalizations {
       'Використовуйте перемикач у верхній панелі, щоб змінити активний холодильник. Спільні холодильники з\'являться тут після прийняття запрошення.';
 
   @override
+  String get fridgesNoneTitle => 'Холодильників ще немає';
+
+  @override
+  String get fridgesNoneBody =>
+      'Створіть перший холодильник, щоб почати відстежувати продукти.';
+
+  @override
+  String get fridgesNoneCta => 'Створити холодильник';
+
+  @override
   String get analyticsMostWasted => 'Найбільше викидається';
 
   @override

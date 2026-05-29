@@ -1010,6 +1010,24 @@ abstract class AppLocalizations {
   /// **'Use the switcher in the top bar to change the active fridge. Shared fridges show up here once you accept an invite.'**
   String get fridgesActiveHint;
 
+  /// No description provided for @fridgesNoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No fridges yet'**
+  String get fridgesNoneTitle;
+
+  /// No description provided for @fridgesNoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first fridge to start tracking groceries.'**
+  String get fridgesNoneBody;
+
+  /// No description provided for @fridgesNoneCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Create fridge'**
+  String get fridgesNoneCta;
+
   /// No description provided for @analyticsMostWasted.
   ///
   /// In en, this message translates to:

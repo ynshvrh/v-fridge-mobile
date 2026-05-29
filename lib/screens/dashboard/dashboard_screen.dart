@@ -93,6 +93,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     ref.listen<int?>(activeFridgeIdProvider, (prev, next) {
       if (prev != next) _reload();
     });
+    // Without a fridge there is nothing for the product list to scope to —
+    // show a CTA pointing at Settings instead of letting every load 401.
+    final fridgeState = ref.watch(fridgeControllerProvider);
+    final hasNoFridges = fridgeState.asData != null && fridgeState.asData!.value.all.isEmpty;
+    if (hasNoFridges) {
+      return Scaffold(
+        backgroundColor: Colors.transparent,
+        body: const _NoFridgesView(),
+      );
+    }
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Column(
@@ -261,6 +271,92 @@ class _EmptyView extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               FilledButton.icon(onPressed: onAdd, icon: const Icon(Icons.add), label: Text(l10n.dashboardAddProduct)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Full-screen prompt rendered by the dashboard when the user has no fridges
+/// at all (typically after deleting their only owned fridge and not being a
+/// member of any shared one). Tapping the button opens a simple name dialog
+/// and creates a fridge inline — same flow as the Settings → Fridges card.
+class _NoFridgesView extends ConsumerWidget {
+  const _NoFridgesView();
+
+  Future<void> _create(BuildContext context, WidgetRef ref) async {
+    final l10n = context.l10n;
+    final controller = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.fridgesNewName),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: InputDecoration(hintText: l10n.fridgesNewNameHint),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.actionCancel)),
+          FilledButton(onPressed: () => Navigator.pop(ctx, controller.text.trim()), child: Text(l10n.actionOk)),
+        ],
+      ),
+    );
+    if (name == null || name.isEmpty) return;
+    try {
+      await ref.read(fridgesServiceProvider).create(name);
+      await ref.read(fridgeControllerProvider.notifier).refresh();
+    } on ApiError catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final vf = context.vfColors;
+    return ListView(
+      padding: const EdgeInsets.all(24),
+      children: [
+        const SizedBox(height: 48),
+        Container(
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: scheme.surface,
+            borderRadius: VfRadius.brXxxl,
+            border: Border.all(color: scheme.outline),
+          ),
+          child: Column(
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(color: vf.mistral, borderRadius: VfRadius.brXl),
+                child: Icon(Icons.kitchen_outlined, size: 36, color: scheme.onSurface),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                l10n.fridgesNoneTitle,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                l10n.fridgesNoneBody,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: vf.mutedForeground),
+              ),
+              const SizedBox(height: 20),
+              FilledButton.icon(
+                onPressed: () => _create(context, ref),
+                icon: const Icon(Icons.add),
+                label: Text(l10n.fridgesNoneCta),
+              ),
             ],
           ),
         ),

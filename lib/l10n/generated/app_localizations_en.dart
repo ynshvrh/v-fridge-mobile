@@ -516,6 +516,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Use the switcher in the top bar to change the active fridge. Shared fridges show up here once you accept an invite.';
 
   @override
+  String get fridgesNoneTitle => 'No fridges yet';
+
+  @override
+  String get fridgesNoneBody =>
+      'Create your first fridge to start tracking groceries.';
+
+  @override
+  String get fridgesNoneCta => 'Create fridge';
+
+  @override
   String get analyticsMostWasted => 'Most wasted';
 
   @override
