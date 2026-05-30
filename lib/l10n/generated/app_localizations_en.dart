@@ -350,6 +350,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'No recipe details for this meal yet. Regenerate the day to get a full recipe.';
 
   @override
+  String get plannerLoadingRecipe => 'Loading recipe...';
+
+  @override
+  String get plannerRecipeError =>
+      'Couldn\'t load the recipe. Please try again.';
+
+  @override
   String get plannerDayMonday => 'Monday';
 
   @override

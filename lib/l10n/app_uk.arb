@@ -112,6 +112,8 @@
   "plannerRecipeSteps": "Рецепт",
   "plannerIngredients": "Інгредієнти",
   "plannerNoRecipeDetails": "Для цієї страви ще немає деталей рецепту. Згенеруйте день заново, щоб отримати повний рецепт.",
+  "plannerLoadingRecipe": "Завантаження рецепту...",
+  "plannerRecipeError": "Не вдалося завантажити рецепт. Спробуйте ще раз.",
   "plannerDayMonday": "Понеділок",
   "plannerDayTuesday": "Вівторок",
   "plannerDayWednesday": "Середа",

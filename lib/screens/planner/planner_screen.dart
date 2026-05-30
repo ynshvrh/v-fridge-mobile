@@ -86,6 +86,9 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
   String? _error;
   // Day currently being regenerated (canonical English name), or null when idle.
   String? _regeneratingDay;
+  // Day whose recipe is currently being lazily fetched, or null when idle. Guards
+  // against duplicate in-flight fetches for the same day.
+  String? _loadingRecipeDay;
 
   @override
   void initState() {
@@ -147,6 +150,28 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
     }
   }
 
+  /// Lazily pulls a single day's recipe (description + steps) the first time its
+  /// card is expanded. Light plans ship meals with empty steps and a null
+  /// description; this fills them in one meal at a time to stay within the token
+  /// budget. The server caches the result, so a second expand never hits the
+  /// network. No-ops when that day is already being fetched.
+  Future<void> _fetchRecipe(String day) async {
+    if (_loadingRecipeDay == day) return; // de-dupe concurrent expands
+    final l10n = context.l10n;
+    setState(() => _loadingRecipeDay = day);
+    try {
+      final updated = await ref.read(plannerServiceProvider).fetchRecipe(day);
+      if (mounted) setState(() => _plan = updated);
+    } on ApiError catch (e) {
+      if (mounted) {
+        final message = e.status == 429 ? l10n.chatRateLimit : l10n.plannerRecipeError;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+      }
+    } finally {
+      if (mounted) setState(() => _loadingRecipeDay = null);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -193,7 +218,9 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
                     child: _MealCard(
                       meal: meals[idx],
                       regenerating: _regeneratingDay == meals[idx].day,
+                      loadingRecipe: _loadingRecipeDay == meals[idx].day,
                       onRegenerate: () => _regenerateDay(meals[idx].day),
+                      onNeedRecipe: () => _fetchRecipe(meals[idx].day),
                     ),
                   ),
                 if (plan.gapItems.isNotEmpty) ...[
@@ -237,11 +264,28 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
 /// and the ingredient list. A per-card action lets the user regenerate just
 /// this day's meal without touching the rest of the plan.
 class _MealCard extends StatelessWidget {
-  const _MealCard({required this.meal, required this.regenerating, required this.onRegenerate});
+  const _MealCard({
+    required this.meal,
+    required this.regenerating,
+    required this.loadingRecipe,
+    required this.onRegenerate,
+    required this.onNeedRecipe,
+  });
 
   final Meal meal;
   final bool regenerating;
+  // True while this day's recipe is being lazily fetched.
+  final bool loadingRecipe;
   final VoidCallback onRegenerate;
+  // Invoked on first expand when the meal has no recipe yet (light plan).
+  final VoidCallback onNeedRecipe;
+
+  // A light meal carries only a name + ingredients; its recipe (description +
+  // steps) is fetched lazily on first expand. Regenerated or already-fetched
+  // meals already have a recipe and skip the network call.
+  bool get _hasRecipe =>
+      meal.steps.isNotEmpty ||
+      (meal.description != null && meal.description!.isNotEmpty);
 
   @override
   Widget build(BuildContext context) {
@@ -261,6 +305,11 @@ class _MealCard extends StatelessWidget {
           tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           expandedCrossAxisAlignment: CrossAxisAlignment.start,
+          onExpansionChanged: (expanded) {
+            // Lazily fetch the recipe the first time a light meal is opened.
+            // Meals that already have a recipe render instantly, no network call.
+            if (expanded && !_hasRecipe && !loadingRecipe) onNeedRecipe();
+          },
           title: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -290,7 +339,24 @@ class _MealCard extends StatelessWidget {
             ],
           ),
           children: [
-            if (!hasDetails)
+            // While the recipe is being lazily fetched, show a spinner in the
+            // card body instead of the "no details" placeholder.
+            if (loadingRecipe && !_hasRecipe)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  children: [
+                    const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(l10n.plannerLoadingRecipe, style: TextStyle(color: vf.mutedForeground)),
+                  ],
+                ),
+              )
+            else if (!hasDetails)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(l10n.plannerNoRecipeDetails, style: TextStyle(color: vf.mutedForeground)),

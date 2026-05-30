@@ -124,6 +124,8 @@
   "plannerRecipeSteps": "Recipe",
   "plannerIngredients": "Ingredients",
   "plannerNoRecipeDetails": "No recipe details for this meal yet. Regenerate the day to get a full recipe.",
+  "plannerLoadingRecipe": "Loading recipe...",
+  "plannerRecipeError": "Couldn't load the recipe. Please try again.",
   "plannerDayMonday": "Monday",
   "plannerDayTuesday": "Tuesday",
   "plannerDayWednesday": "Wednesday",
