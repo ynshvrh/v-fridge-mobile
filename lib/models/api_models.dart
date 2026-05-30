@@ -172,14 +172,26 @@ class Meal {
   final String day;
   final List<String> ingredients;
   final String? note;
+  final String? description;
+  final List<String> steps;
 
-  Meal({required this.name, required this.day, required this.ingredients, this.note});
+  Meal({
+    required this.name,
+    required this.day,
+    required this.ingredients,
+    this.note,
+    this.description,
+    this.steps = const [],
+  });
 
   factory Meal.fromJson(Map<String, dynamic> j) => Meal(
         name: j['name'] as String,
         day: j['day'] as String? ?? '',
-        ingredients: (j['ingredients'] as List).cast<String>(),
+        // Tolerate old cached plans that may be missing the list entirely.
+        ingredients: (j['ingredients'] as List?)?.cast<String>() ?? const [],
         note: j['note'] as String?,
+        description: j['description'] as String?,
+        steps: (j['steps'] as List?)?.cast<String>() ?? const [],
       );
 }
 

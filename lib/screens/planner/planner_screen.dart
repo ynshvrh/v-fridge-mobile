@@ -84,6 +84,8 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
   bool _loading = false;
   bool _importing = false;
   String? _error;
+  // Day currently being regenerated (canonical English name), or null when idle.
+  String? _regeneratingDay;
 
   @override
   void initState() {
@@ -132,6 +134,19 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
     }
   }
 
+  Future<void> _regenerateDay(String day) async {
+    if (_regeneratingDay != null) return; // serialize: one day at a time
+    setState(() => _regeneratingDay = day);
+    try {
+      final updated = await ref.read(plannerServiceProvider).regenerateDay(day);
+      if (mounted) setState(() => _plan = updated);
+    } on ApiError catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+    } finally {
+      if (mounted) setState(() => _regeneratingDay = null);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -175,25 +190,12 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
                 for (var idx = 0; idx < meals.length; idx++)
                   StaggeredEntry(
                     index: idx,
-                    child: Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(plannerDayLabel(l10n, meals[idx].day).toUpperCase(), style: Theme.of(context).textTheme.labelSmall?.copyWith(letterSpacing: 1.5, color: Theme.of(context).colorScheme.outline)),
-                            const SizedBox(height: 4),
-                            Text(meals[idx].name, style: Theme.of(context).textTheme.titleMedium),
-                            if (meals[idx].note != null && meals[idx].note!.isNotEmpty) ...[
-                              const SizedBox(height: 4),
-                              Text(meals[idx].note!, style: TextStyle(fontStyle: FontStyle.italic, color: Theme.of(context).colorScheme.outline)),
-                            ],
-                            const Divider(height: 24),
-                            ...meals[idx].ingredients.map((i) => Padding(padding: const EdgeInsets.symmetric(vertical: 2), child: Text('• $i'))),
-                          ],
-                        ),
-                      ),
-                    )),
+                    child: _MealCard(
+                      meal: meals[idx],
+                      regenerating: _regeneratingDay == meals[idx].day,
+                      onRegenerate: () => _regenerateDay(meals[idx].day),
+                    ),
+                  ),
                 if (plan.gapItems.isNotEmpty) ...[
                   const SizedBox(height: 16),
                   Text(l10n.plannerMissingIngredients, style: Theme.of(context).textTheme.titleMedium),
@@ -225,6 +227,124 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Expandable meal card. Collapsed it shows just the day label + meal name;
+/// expanded it reveals the description, the cooking steps as a numbered recipe,
+/// and the ingredient list. A per-card action lets the user regenerate just
+/// this day's meal without touching the rest of the plan.
+class _MealCard extends StatelessWidget {
+  const _MealCard({required this.meal, required this.regenerating, required this.onRegenerate});
+
+  final Meal meal;
+  final bool regenerating;
+  final VoidCallback onRegenerate;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final vf = context.vfColors;
+    final hasDetails = (meal.description != null && meal.description!.isNotEmpty) ||
+        meal.steps.isNotEmpty ||
+        meal.ingredients.isNotEmpty;
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Theme(
+        // ExpansionTile draws its own dividers; drop them so the card edge stays clean.
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          expandedCrossAxisAlignment: CrossAxisAlignment.start,
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                plannerDayLabel(l10n, meal.day).toUpperCase(),
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(letterSpacing: 1.5, color: scheme.outline),
+              ),
+              const SizedBox(height: 4),
+              Text(meal.name, style: Theme.of(context).textTheme.titleMedium),
+              if (meal.note != null && meal.note!.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(meal.note!, style: TextStyle(fontStyle: FontStyle.italic, color: scheme.outline)),
+              ],
+            ],
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                onPressed: regenerating ? null : onRegenerate,
+                tooltip: l10n.plannerRegenerateDay,
+                icon: regenerating
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    : Icon(Icons.refresh, color: scheme.primary),
+              ),
+              Icon(Icons.expand_more, color: scheme.outline),
+            ],
+          ),
+          children: [
+            if (!hasDetails)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(l10n.plannerNoRecipeDetails, style: TextStyle(color: vf.mutedForeground)),
+              ),
+            if (meal.description != null && meal.description!.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(meal.description!, style: TextStyle(color: vf.mutedForeground)),
+            ],
+            if (meal.steps.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Text(
+                l10n.plannerRecipeSteps,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 8),
+              for (var i = 0; i < meal.steps.length; i++)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 3),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 22,
+                        height: 22,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: vf.mistral.withValues(alpha: 0.22),
+                          borderRadius: VfRadius.brXl,
+                        ),
+                        child: Text(
+                          '${i + 1}',
+                          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: vf.accentForeground),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(child: Text(meal.steps[i])),
+                    ],
+                  ),
+                ),
+            ],
+            if (meal.ingredients.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Text(
+                l10n.plannerIngredients,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 8),
+              ...meal.ingredients.map((i) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    child: Text('• $i'),
+                  )),
+            ],
+          ],
+        ),
       ),
     );
   }

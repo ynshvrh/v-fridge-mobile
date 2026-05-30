@@ -215,6 +215,20 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String addProductIncompleteWarning(String fields) {
+    return 'Деякі дані відсутні ($fields). Неповні дані можуть призвести до хибних порад AI шефа. Ви все одно можете додати продукт.';
+  }
+
+  @override
+  String get addProductIncompleteCategory => 'категорія';
+
+  @override
+  String get addProductIncompleteQuantity => 'кількість';
+
+  @override
+  String get addProductIncompleteExpiry => 'термін придатності';
+
+  @override
   String get barcodeTitle => 'Сканувати штрих-код';
 
   @override
@@ -327,6 +341,19 @@ class AppLocalizationsUk extends AppLocalizations {
   String plannerImportSkipped(int skipped) {
     return ' ($skipped вже є)';
   }
+
+  @override
+  String get plannerRegenerateDay => 'Згенерувати цей день заново';
+
+  @override
+  String get plannerRecipeSteps => 'Рецепт';
+
+  @override
+  String get plannerIngredients => 'Інгредієнти';
+
+  @override
+  String get plannerNoRecipeDetails =>
+      'Для цієї страви ще немає деталей рецепту. Згенеруйте день заново, щоб отримати повний рецепт.';
 
   @override
   String get plannerDayMonday => 'Понеділок';

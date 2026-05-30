@@ -258,6 +258,18 @@ class PlannerService {
     );
     return (created: data['created'] as int, skipped: data['skipped'] as int);
   }
+
+  /// Asks the LLM to swap out a single weekday's meal and returns the FULL
+  /// updated plan (only [day]'s meal changes; gapItems stay as-is). [day] must
+  /// be a canonical English day name (Monday..Friday). Shares the chat
+  /// rate-limit bucket, so callers should be ready for a 429.
+  Future<MealPlan> regenerateDay(String day) async {
+    final data = await _api.post<Map<String, dynamic>>(
+      '/meal-plan/regenerate-day',
+      body: {'day': day},
+    );
+    return MealPlan.fromJson(data);
+  }
 }
 
 class FridgesService {

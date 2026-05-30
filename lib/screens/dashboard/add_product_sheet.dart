@@ -42,13 +42,20 @@ class _AddProductSheetState extends ConsumerState<AddProductSheet> {
             ? p.quantity.toStringAsFixed(0)
             : p.quantity.toString();
     _quantity = TextEditingController(text: initialQty);
+    // Rebuild so the incomplete-data warning reflects the live quantity value.
+    _quantity.addListener(_onFormChanged);
     _unit = _units.contains(p?.unit) ? p!.unit : 'pcs';
     _category = Categories.slugs.contains(p?.category) ? p!.category : 'other';
     _expiry = p?.expiryDate;
   }
 
+  void _onFormChanged() {
+    if (mounted) setState(() {});
+  }
+
   @override
   void dispose() {
+    _quantity.removeListener(_onFormChanged);
     _name.dispose();
     _quantity.dispose();
     super.dispose();
@@ -124,12 +131,25 @@ class _AddProductSheetState extends ConsumerState<AddProductSheet> {
     }
   }
 
+  /// Lists the localized names of fields that are blank/defaulted, so we can
+  /// warn that incomplete data degrades the AI chef's suggestions. Advisory
+  /// only — it never blocks submission.
+  List<String> _incompleteFields(AppLocalizations l10n) {
+    final fields = <String>[];
+    if (_category == 'other') fields.add(l10n.addProductIncompleteCategory);
+    final qty = double.tryParse(_quantity.text.replaceAll(',', '.')) ?? 0;
+    if (qty <= 0) fields.add(l10n.addProductIncompleteQuantity);
+    if (_expiry == null) fields.add(l10n.addProductIncompleteExpiry);
+    return fields;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final inset = MediaQuery.of(context).viewInsets.bottom;
     final title = widget.isEdit ? l10n.addProductEditTitle : l10n.addProductTitle;
     final actionLabel = widget.isEdit ? l10n.actionSave : l10n.addProductActionAdd;
+    final incomplete = _incompleteFields(l10n);
     return Padding(
       padding: EdgeInsets.only(bottom: inset),
       child: SafeArea(
@@ -203,6 +223,10 @@ class _AddProductSheetState extends ConsumerState<AddProductSheet> {
                   ],
                 ),
               ),
+              if (incomplete.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                _IncompleteDataWarning(message: l10n.addProductIncompleteWarning(incomplete.join(', '))),
+              ],
               const SizedBox(height: 24),
               FilledButton(
                 onPressed: _saving ? null : _save,
@@ -213,6 +237,41 @@ class _AddProductSheetState extends ConsumerState<AddProductSheet> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Non-blocking advisory panel shown above the submit button when the product
+/// is missing fields that the AI chef relies on (category, quantity, expiry).
+/// Styled as a soft warning, not an error — submission is still allowed.
+class _IncompleteDataWarning extends StatelessWidget {
+  const _IncompleteDataWarning({required this.message});
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final tone = scheme.tertiary;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: tone.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: tone.withValues(alpha: 0.45)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.info_outline, size: 18, color: tone),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: scheme.onSurface),
+            ),
+          ),
+        ],
       ),
     );
   }
