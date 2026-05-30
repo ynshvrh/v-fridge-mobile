@@ -211,6 +211,20 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String addProductIncompleteWarning(String fields) {
+    return 'Some details are missing ($fields). Incomplete data can lead the AI chef to wrong suggestions. You can still add it.';
+  }
+
+  @override
+  String get addProductIncompleteCategory => 'category';
+
+  @override
+  String get addProductIncompleteQuantity => 'quantity';
+
+  @override
+  String get addProductIncompleteExpiry => 'expiry date';
+
+  @override
   String get barcodeTitle => 'Scan barcode';
 
   @override
@@ -321,6 +335,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String plannerImportSkipped(int skipped) {
     return ' ($skipped already there)';
   }
+
+  @override
+  String get plannerRegenerateDay => 'Regenerate this day';
+
+  @override
+  String get plannerRecipeSteps => 'Recipe';
+
+  @override
+  String get plannerIngredients => 'Ingredients';
+
+  @override
+  String get plannerNoRecipeDetails =>
+      'No recipe details for this meal yet. Regenerate the day to get a full recipe.';
 
   @override
   String get plannerDayMonday => 'Monday';

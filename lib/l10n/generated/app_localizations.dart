@@ -458,6 +458,30 @@ abstract class AppLocalizations {
   /// **'Filled from barcode {barcode}'**
   String addProductFilledFromBarcode(String barcode);
 
+  /// No description provided for @addProductIncompleteWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Some details are missing ({fields}). Incomplete data can lead the AI chef to wrong suggestions. You can still add it.'**
+  String addProductIncompleteWarning(String fields);
+
+  /// No description provided for @addProductIncompleteCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'category'**
+  String get addProductIncompleteCategory;
+
+  /// No description provided for @addProductIncompleteQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'quantity'**
+  String get addProductIncompleteQuantity;
+
+  /// No description provided for @addProductIncompleteExpiry.
+  ///
+  /// In en, this message translates to:
+  /// **'expiry date'**
+  String get addProductIncompleteExpiry;
+
   /// No description provided for @barcodeTitle.
   ///
   /// In en, this message translates to:
@@ -655,6 +679,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **' ({skipped} already there)'**
   String plannerImportSkipped(int skipped);
+
+  /// No description provided for @plannerRegenerateDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Regenerate this day'**
+  String get plannerRegenerateDay;
+
+  /// No description provided for @plannerRecipeSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipe'**
+  String get plannerRecipeSteps;
+
+  /// No description provided for @plannerIngredients.
+  ///
+  /// In en, this message translates to:
+  /// **'Ingredients'**
+  String get plannerIngredients;
+
+  /// No description provided for @plannerNoRecipeDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'No recipe details for this meal yet. Regenerate the day to get a full recipe.'**
+  String get plannerNoRecipeDetails;
 
   /// No description provided for @plannerDayMonday.
   ///

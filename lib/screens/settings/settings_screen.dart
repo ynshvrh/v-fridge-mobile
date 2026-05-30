@@ -78,8 +78,9 @@ class SettingsScreen extends ConsumerWidget {
             index: 6,
             child: Card(
               child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
                 leading: const Icon(Icons.logout),
-                title: Text(l10n.settingsSignOut),
+                title: Text(l10n.settingsSignOut, style: const TextStyle(fontWeight: FontWeight.w600)),
                 onTap: () async {
                   final ok = await showDialog<bool>(
                     context: context,
@@ -110,12 +111,15 @@ class _ProfileCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Row(
           children: [
             CircleAvatar(
-              radius: 28,
-              child: Text((auth.user?.username ?? '?').characters.first.toUpperCase()),
+              radius: 30,
+              child: Text(
+                (auth.user?.username ?? '?').characters.first.toUpperCase(),
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+              ),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -150,6 +154,38 @@ class _ProfileCard extends StatelessWidget {
   }
 }
 
+/// Card header row reused across every settings section so the icon + title
+/// rhythm stays consistent.
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.icon, required this.title});
+  final IconData icon;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: scheme.primary.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, size: 20, color: scheme.primary),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          title,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+        ),
+      ],
+    );
+  }
+}
+
 class _ThemeCard extends StatelessWidget {
   const _ThemeCard({required this.mode, required this.onChanged});
   final ThemeMode mode;
@@ -160,19 +196,14 @@ class _ThemeCard extends StatelessWidget {
     final l10n = context.l10n;
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                const Icon(Icons.palette_outlined),
-                const SizedBox(width: 8),
-                Text(l10n.settingsAppearance, style: Theme.of(context).textTheme.titleMedium),
-              ],
-            ),
-            const SizedBox(height: 8),
+            _SectionHeader(icon: Icons.palette_outlined, title: l10n.settingsAppearance),
+            const SizedBox(height: 16),
             SegmentedButton<ThemeMode>(
+              showSelectedIcon: false,
               segments: [
                 ButtonSegment(value: ThemeMode.light, label: Text(l10n.settingsThemeLight), icon: const Icon(Icons.light_mode_outlined)),
                 ButtonSegment(value: ThemeMode.dark, label: Text(l10n.settingsThemeDark), icon: const Icon(Icons.dark_mode_outlined)),
@@ -202,19 +233,14 @@ class _LanguageCard extends StatelessWidget {
     final selected = localeOverride ?? _systemSentinel;
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                const Icon(Icons.translate_outlined),
-                const SizedBox(width: 8),
-                Text(l10n.settingsLanguage, style: Theme.of(context).textTheme.titleMedium),
-              ],
-            ),
-            const SizedBox(height: 8),
+            _SectionHeader(icon: Icons.translate_outlined, title: l10n.settingsLanguage),
+            const SizedBox(height: 16),
             SegmentedButton<Locale>(
+              showSelectedIcon: false,
               segments: [
                 ButtonSegment(value: _systemSentinel, label: Text(l10n.settingsLanguageAuto)),
                 ButtonSegment(value: const Locale('en'), label: Text(l10n.settingsLanguageEnglish)),
@@ -244,23 +270,17 @@ class _CuisineCard extends StatelessWidget {
     final slug = Cuisines.slugs.contains(currentSlug) ? currentSlug : Cuisines.any;
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                const Icon(Icons.local_dining_outlined),
-                const SizedBox(width: 8),
-                Text(l10n.settingsCuisine, style: Theme.of(context).textTheme.titleMedium),
-              ],
-            ),
-            const SizedBox(height: 4),
+            _SectionHeader(icon: Icons.local_dining_outlined, title: l10n.settingsCuisine),
+            const SizedBox(height: 8),
             Text(
               l10n.settingsCuisineHint,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.outline),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               initialValue: slug,
               decoration: InputDecoration(labelText: l10n.settingsCuisine),

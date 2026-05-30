@@ -114,40 +114,48 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
                         child: Builder(builder: (_) {
                           // Flatten the two sections into a single list of
                           // (index, widget) entries so the stagger cascade
-                          // crosses the header → unchecked → header → checked
-                          // boundary instead of resetting at each section.
+                          // crosses the section → category-header → items
+                          // boundaries instead of resetting at each one. Within
+                          // each section, rows are grouped by category with a
+                          // localized sub-header in canonical category order.
                           final entries = <Widget>[];
                           var idx = 0;
                           Widget wrap(Widget w) =>
                               StaggeredEntry(index: idx++, child: w);
-                          if (unchecked.isNotEmpty) {
-                            entries.add(wrap(_SectionHeader(label: l10n.shoppingToBuy, count: unchecked.length, accent: true)));
-                            for (final i in unchecked) {
-                              entries.add(wrap(AnimatedPress(
-                                onTap: () => _toggle(i),
-                                child: _Tile(
-                                  item: i,
-                                  onToggle: () => _toggle(i),
-                                  onDelete: () => _delete(i),
-                                  onPurchase: () => _purchase(i),
-                                ),
-                              )));
+
+                          void addSection(String label, List<ShoppingItem> items, bool accent) {
+                            if (items.isEmpty) return;
+                            entries.add(wrap(_SectionHeader(label: label, count: items.length, accent: accent)));
+                            // Group by category, preserving the existing order
+                            // of items inside each group.
+                            final byCategory = <String, List<ShoppingItem>>{};
+                            for (final i in items) {
+                              (byCategory[i.category] ??= []).add(i);
+                            }
+                            final orderedCategories = [
+                              ...Categories.slugs.where(byCategory.containsKey),
+                              // Defensive: surface any unknown category code last.
+                              ...byCategory.keys.where((c) => !Categories.slugs.contains(c)),
+                            ];
+                            for (final category in orderedCategories) {
+                              entries.add(wrap(_CategoryHeader(label: categoryLabel(l10n, category))));
+                              for (final i in byCategory[category]!) {
+                                entries.add(wrap(AnimatedPress(
+                                  onTap: () => _toggle(i),
+                                  child: _Tile(
+                                    item: i,
+                                    onToggle: () => _toggle(i),
+                                    onDelete: () => _delete(i),
+                                    onPurchase: () => _purchase(i),
+                                  ),
+                                )));
+                              }
                             }
                           }
-                          if (checked.isNotEmpty) {
-                            entries.add(wrap(_SectionHeader(label: l10n.shoppingGotThem, count: checked.length, accent: false)));
-                            for (final i in checked) {
-                              entries.add(wrap(AnimatedPress(
-                                onTap: () => _toggle(i),
-                                child: _Tile(
-                                  item: i,
-                                  onToggle: () => _toggle(i),
-                                  onDelete: () => _delete(i),
-                                  onPurchase: () => _purchase(i),
-                                ),
-                              )));
-                            }
-                          }
+
+                          addSection(l10n.shoppingToBuy, unchecked, true);
+                          addSection(l10n.shoppingGotThem, checked, false);
+
                           return ListView(
                             padding: const EdgeInsets.all(8),
                             children: entries,
@@ -251,6 +259,30 @@ class _SectionHeader extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Lightweight category sub-header inside a section. Quieter than the pill
+/// section header so the two levels of grouping stay visually distinct.
+class _CategoryHeader extends StatelessWidget {
+  const _CategoryHeader({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final vf = context.vfColors;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 12, 8, 4),
+      child: Text(
+        label.toUpperCase(),
+        style: TextStyle(
+          color: vf.mutedForeground,
+          fontWeight: FontWeight.w700,
+          fontSize: 11,
+          letterSpacing: 0.8,
+        ),
       ),
     );
   }
