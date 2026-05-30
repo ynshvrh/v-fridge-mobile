@@ -704,6 +704,18 @@ abstract class AppLocalizations {
   /// **'No recipe details for this meal yet. Regenerate the day to get a full recipe.'**
   String get plannerNoRecipeDetails;
 
+  /// No description provided for @plannerLoadingRecipe.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading recipe...'**
+  String get plannerLoadingRecipe;
+
+  /// No description provided for @plannerRecipeError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the recipe. Please try again.'**
+  String get plannerRecipeError;
+
   /// No description provided for @plannerDayMonday.
   ///
   /// In en, this message translates to:

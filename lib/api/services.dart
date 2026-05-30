@@ -270,6 +270,20 @@ class PlannerService {
     );
     return MealPlan.fromJson(data);
   }
+
+  /// Lazily fills in a single day's recipe (description + cooking steps) and
+  /// returns the FULL updated plan (only [day]'s meal gains its recipe; every
+  /// other meal and the gapItems stay as-is). [day] must be a canonical English
+  /// day name (Monday..Friday). The server caches the result, so a repeat call
+  /// for the same day returns instantly without spending tokens. Shares the chat
+  /// rate-limit bucket, so callers should be ready for a 429.
+  Future<MealPlan> fetchRecipe(String day) async {
+    final data = await _api.post<Map<String, dynamic>>(
+      '/meal-plan/recipe',
+      body: {'day': day},
+    );
+    return MealPlan.fromJson(data);
+  }
 }
 
 class FridgesService {

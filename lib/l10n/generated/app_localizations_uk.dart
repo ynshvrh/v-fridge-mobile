@@ -356,6 +356,13 @@ class AppLocalizationsUk extends AppLocalizations {
       'Для цієї страви ще немає деталей рецепту. Згенеруйте день заново, щоб отримати повний рецепт.';
 
   @override
+  String get plannerLoadingRecipe => 'Завантаження рецепту...';
+
+  @override
+  String get plannerRecipeError =>
+      'Не вдалося завантажити рецепт. Спробуйте ще раз.';
+
+  @override
   String get plannerDayMonday => 'Понеділок';
 
   @override
