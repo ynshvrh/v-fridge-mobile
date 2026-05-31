@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/l10n.dart';
@@ -123,38 +124,60 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
                           Widget wrap(Widget w) =>
                               StaggeredEntry(index: idx++, child: w);
 
-                          void addSection(String label, List<ShoppingItem> items, bool accent) {
-                            if (items.isEmpty) return;
-                            entries.add(wrap(_SectionHeader(label: label, count: items.length, accent: accent)));
-                            // Group by category, preserving the existing order
-                            // of items inside each group.
+                          // Shared helper: a tappable shopping row.
+                          Widget tileFor(ShoppingItem i) => AnimatedPress(
+                                onTap: () => _toggle(i),
+                                child: _Tile(
+                                  item: i,
+                                  onToggle: () => _toggle(i),
+                                  onDelete: () => _delete(i),
+                                  onPurchase: () => _purchase(i),
+                                ),
+                              );
+
+                          // Groups items by category in canonical order, then
+                          // surfaces any unknown codes last.
+                          Map<String, List<ShoppingItem>> groupByCategory(List<ShoppingItem> items) {
                             final byCategory = <String, List<ShoppingItem>>{};
                             for (final i in items) {
                               (byCategory[i.category] ??= []).add(i);
                             }
-                            final orderedCategories = [
-                              ...Categories.slugs.where(byCategory.containsKey),
-                              // Defensive: surface any unknown category code last.
-                              ...byCategory.keys.where((c) => !Categories.slugs.contains(c)),
-                            ];
-                            for (final category in orderedCategories) {
-                              entries.add(wrap(_CategoryHeader(label: categoryLabel(l10n, category))));
-                              for (final i in byCategory[category]!) {
-                                entries.add(wrap(AnimatedPress(
-                                  onTap: () => _toggle(i),
-                                  child: _Tile(
-                                    item: i,
-                                    onToggle: () => _toggle(i),
-                                    onDelete: () => _delete(i),
-                                    onPurchase: () => _purchase(i),
-                                  ),
-                                )));
-                              }
+                            return byCategory;
+                          }
+
+                          List<String> orderedCategories(Map<String, List<ShoppingItem>> byCategory) => [
+                                ...Categories.slugs.where(byCategory.containsKey),
+                                ...byCategory.keys.where((c) => !Categories.slugs.contains(c)),
+                              ];
+
+                          // To-buy section: each category becomes a collapsible
+                          // card so the user can fold away what they're not
+                          // shopping for right now.
+                          if (unchecked.isNotEmpty) {
+                            entries.add(wrap(_SectionHeader(label: l10n.shoppingToBuy, count: unchecked.length, accent: true)));
+                            final byCategory = groupByCategory(unchecked);
+                            for (final category in orderedCategories(byCategory)) {
+                              final items = byCategory[category]!;
+                              entries.add(wrap(_CategoryCard(
+                                label: categoryLabel(l10n, category),
+                                count: items.length,
+                                children: items.map(tileFor).toList(),
+                              )));
                             }
                           }
 
-                          addSection(l10n.shoppingToBuy, unchecked, true);
-                          addSection(l10n.shoppingGotThem, checked, false);
+                          // Got-them section stays flat — it's a wrap-up list,
+                          // not something the user actively works through.
+                          if (checked.isNotEmpty) {
+                            entries.add(wrap(_SectionHeader(label: l10n.shoppingGotThem, count: checked.length, accent: false)));
+                            final byCategory = groupByCategory(checked);
+                            for (final category in orderedCategories(byCategory)) {
+                              entries.add(wrap(_CategoryHeader(label: categoryLabel(l10n, category))));
+                              for (final i in byCategory[category]!) {
+                                entries.add(wrap(tileFor(i)));
+                              }
+                            }
+                          }
 
                           return ListView(
                             padding: const EdgeInsets.all(8),
@@ -282,6 +305,107 @@ class _CategoryHeader extends StatelessWidget {
           fontWeight: FontWeight.w700,
           fontSize: 11,
           letterSpacing: 0.8,
+        ),
+      ),
+    );
+  }
+}
+
+/// Collapsible card grouping the to-buy items of a single category. The header
+/// shows the category name + item count and a chevron that rotates as the card
+/// opens; tapping it folds the item tiles away with a smooth size animation.
+/// Default state is expanded so nothing is hidden on first paint.
+class _CategoryCard extends StatefulWidget {
+  const _CategoryCard({required this.label, required this.count, required this.children});
+  final String label;
+  final int count;
+  final List<Widget> children;
+
+  @override
+  State<_CategoryCard> createState() => _CategoryCardState();
+}
+
+class _CategoryCardState extends State<_CategoryCard> {
+  bool _expanded = true;
+
+  void _toggle() {
+    HapticFeedback.lightImpact();
+    setState(() => _expanded = !_expanded);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final vf = context.vfColors;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      child: Container(
+        decoration: BoxDecoration(
+          color: scheme.surface,
+          borderRadius: VfRadius.brXl,
+          border: Border.all(color: scheme.outline),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            InkWell(
+              onTap: _toggle,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        widget.label.toUpperCase(),
+                        style: TextStyle(
+                          color: vf.mutedForeground,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 11,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: vf.zephir,
+                        borderRadius: VfRadius.brXl,
+                      ),
+                      child: Text(
+                        '${widget.count}',
+                        style: TextStyle(color: vf.accentForeground, fontWeight: FontWeight.w700, fontSize: 11),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    AnimatedRotation(
+                      turns: _expanded ? 0.5 : 0,
+                      duration: const Duration(milliseconds: 220),
+                      curve: Curves.easeOutBack,
+                      child: Icon(Icons.expand_more, color: vf.mutedForeground, size: 20),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 240),
+              curve: Curves.easeOutCubic,
+              alignment: Alignment.topCenter,
+              child: ConstrainedBox(
+                constraints: _expanded
+                    ? const BoxConstraints()
+                    : const BoxConstraints(maxHeight: 0),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 0, 8, 6),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: widget.children,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -7,6 +8,7 @@ import '../../models/api_models.dart';
 import '../../providers/providers.dart';
 import '../../theme/vf_colors.dart';
 import '../../theme/vf_radius.dart';
+import '../../widgets/animated_press.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen({super.key});
@@ -69,6 +71,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     try {
       final reply = await ref.read(chatServiceProvider).send(text);
       setState(() => _messages = [..._messages, reply]);
+      // A small tap so the reply "lands" in the hand, not just on screen.
+      HapticFeedback.lightImpact();
       _scrollToBottom();
     } on ApiError catch (e) {
       if (!mounted) return;
@@ -142,16 +146,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  SizedBox(
-                    width: 48,
-                    height: 48,
-                    child: FilledButton(
-                      onPressed: _sending ? null : () => _send(),
-                      style: FilledButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        shape: const RoundedRectangleBorder(borderRadius: VfRadius.brLg),
+                  // Quick scale + haptic on tap so sending feels tactile; the
+                  // button's own onPressed still drives the actual send.
+                  AnimatedPress(
+                    onTap: _sending ? null : () => _send(),
+                    scale: 0.9,
+                    child: SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: IgnorePointer(
+                        child: FilledButton(
+                          onPressed: _sending ? null : () {},
+                          style: FilledButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            shape: const RoundedRectangleBorder(borderRadius: VfRadius.brLg),
+                          ),
+                          child: const Icon(Icons.send, size: 20),
+                        ),
                       ),
-                      child: const Icon(Icons.send, size: 20),
                     ),
                   ),
                 ],
@@ -356,6 +368,8 @@ class _Bubble extends StatelessWidget {
       ),
     )
         // Newly mounted bubbles slide in from the speaker's side and fade up.
+        // AI replies also pop in with a slight overshoot so an answer "lands"
+        // with a bit of character; user bubbles get a gentler settle.
         .animate()
         .fadeIn(duration: 220.ms, curve: Curves.easeOut)
         .slideX(
@@ -363,6 +377,12 @@ class _Bubble extends StatelessWidget {
           end: 0,
           duration: 260.ms,
           curve: Curves.easeOutCubic,
+        )
+        .scaleXY(
+          begin: isAi ? 0.92 : 0.97,
+          end: 1,
+          duration: isAi ? 320.ms : 240.ms,
+          curve: isAi ? Curves.easeOutBack : Curves.easeOut,
         );
   }
 }
@@ -408,7 +428,7 @@ class _TypingBubble extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)),
+                _TypingDots(color: vf.mutedForeground),
                 const SizedBox(width: 10),
                 Text(l10n.chatThinking, style: TextStyle(color: vf.mutedForeground, fontWeight: FontWeight.w500)),
               ],
@@ -428,5 +448,63 @@ class _TypingBubble extends StatelessWidget {
           duration: 1200.ms,
           curve: Curves.easeInOut,
         );
+  }
+}
+
+/// Cute three-dot "typing" indicator. Each dot bounces up and brightens in
+/// sequence so the row reads as the assistant actively composing a reply,
+/// replacing the flat spinner.
+class _TypingDots extends StatefulWidget {
+  const _TypingDots({required this.color});
+  final Color color;
+
+  @override
+  State<_TypingDots> createState() => _TypingDotsState();
+}
+
+class _TypingDotsState extends State<_TypingDots> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller =
+      AnimationController(vsync: this, duration: const Duration(milliseconds: 1100))..repeat();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 30,
+      height: 14,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, _) {
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: List.generate(3, (i) {
+              // Stagger each dot a third of the cycle apart, then ease the
+              // 0..1..0 wave so the bounce feels springy rather than linear.
+              final phase = (_controller.value - i * 0.18) % 1.0;
+              final wave = Curves.easeInOut.transform((1 - (phase * 2 - 1).abs()).clamp(0.0, 1.0));
+              return Padding(
+                padding: EdgeInsets.only(right: i == 2 ? 0 : 4),
+                child: Transform.translate(
+                  offset: Offset(0, -3 * wave),
+                  child: Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: widget.color.withValues(alpha: 0.4 + 0.6 * wave),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+              );
+            }),
+          );
+        },
+      ),
+    );
   }
 }
