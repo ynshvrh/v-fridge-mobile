@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -27,6 +29,8 @@ class _AddProductSheetState extends ConsumerState<AddProductSheet> {
   DateTime? _expiry;
   bool _expiryChanged = false;
   bool _saving = false;
+  // Brief celebratory check on the submit button before the sheet closes.
+  bool _saved = false;
   String? _error;
 
   static const _units = ['pcs', 'kg', 'g', 'l', 'ml'];
@@ -123,11 +127,14 @@ class _AddProductSheetState extends ConsumerState<AddProductSheet> {
           category: _category,
         );
       }
+      if (!mounted) return;
+      // Celebrate the save: medium haptic + a brief check on the button, then close.
+      HapticFeedback.mediumImpact();
+      setState(() { _saving = false; _saved = true; });
+      await Future.delayed(const Duration(milliseconds: 450));
       if (mounted) Navigator.pop(context, saved);
     } on ApiError catch (e) {
-      setState(() => _error = e.message);
-    } finally {
-      if (mounted) setState(() => _saving = false);
+      setState(() { _error = e.message; _saving = false; });
     }
   }
 
@@ -229,10 +236,14 @@ class _AddProductSheetState extends ConsumerState<AddProductSheet> {
               ],
               const SizedBox(height: 24),
               FilledButton(
-                onPressed: _saving ? null : _save,
-                child: _saving
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                    : Text(actionLabel),
+                onPressed: (_saving || _saved) ? null : _save,
+                child: _saved
+                    ? const Icon(Icons.check_rounded, size: 24)
+                        .animate()
+                        .scale(begin: const Offset(0.4, 0.4), end: const Offset(1, 1), duration: 280.ms, curve: Curves.easeOutBack)
+                    : _saving
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                        : Text(actionLabel),
               ),
             ],
           ),
