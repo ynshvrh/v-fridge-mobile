@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../l10n/l10n.dart';
 import '../../models/api_models.dart';
@@ -77,8 +78,19 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
   }
 
   Future<void> _purchase(ShoppingItem item) async {
+    // Ask for an optional expiry date before moving the item into the fridge.
+    // Landing products with "No date" silently breaks the dashboard expiry
+    // stats and the chef's suggestions, so we prompt the user up front. The
+    // sheet returns the chosen date, or null when the user skips (no date),
+    // or nothing at all when the user dismisses without deciding.
+    final result = await showModalBottomSheet<_PurchaseExpiryResult>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => _PurchaseExpirySheet(itemName: item.name),
+    );
+    if (result == null) return; // dismissed — leave the item untouched
     try {
-      final product = await ref.read(shoppingServiceProvider).purchase(item.id);
+      final product = await ref.read(shoppingServiceProvider).purchase(item.id, expiryDate: result.date);
       setState(() => _items = _items.where((i) => i.id != item.id).toList());
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.shoppingAddedToFridge(product.name))));
@@ -683,6 +695,91 @@ class _AddShoppingItemSheetState extends ConsumerState<_AddShoppingItemSheet> {
               FilledButton(
                 onPressed: _saving ? null : _save,
                 child: _saving ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : Text(l10n.actionAdd),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Outcome of the purchase expiry prompt. A non-null instance means the user
+/// confirmed the move; [date] is the chosen expiry, or null when they skipped.
+/// The sheet returns null (no instance) when dismissed without deciding.
+class _PurchaseExpiryResult {
+  const _PurchaseExpiryResult(this.date);
+  final DateTime? date;
+}
+
+/// Bottom sheet shown before moving a shopping item into the fridge. Lets the
+/// user attach an optional expiry date so dashboard stats and chef suggestions
+/// stay accurate, or skip it for items without a meaningful date. Mirrors the
+/// expiry-row style used in the add-product sheet.
+class _PurchaseExpirySheet extends StatefulWidget {
+  const _PurchaseExpirySheet({required this.itemName});
+  final String itemName;
+
+  @override
+  State<_PurchaseExpirySheet> createState() => _PurchaseExpirySheetState();
+}
+
+class _PurchaseExpirySheetState extends State<_PurchaseExpirySheet> {
+  DateTime? _expiry;
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      firstDate: DateTime.now().subtract(const Duration(days: 30)),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+      initialDate: _expiry ?? DateTime.now().add(const Duration(days: 7)),
+    );
+    if (picked != null) setState(() => _expiry = picked);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final inset = MediaQuery.of(context).viewInsets.bottom;
+    return Padding(
+      padding: EdgeInsets.only(bottom: inset),
+      child: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(l10n.shoppingExpiryTitle, style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 6),
+              Text(
+                l10n.shoppingExpiryBody(widget.itemName),
+                style: TextStyle(color: context.vfColors.mutedForeground),
+              ),
+              const SizedBox(height: 16),
+              InputDecorator(
+                decoration: InputDecoration(labelText: l10n.addProductExpiry),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(_expiry == null ? l10n.productNoDate : DateFormat('MMMM d, yyyy').format(_expiry!)),
+                    Row(children: [
+                      if (_expiry != null)
+                        IconButton(onPressed: () => setState(() => _expiry = null), icon: const Icon(Icons.close)),
+                      IconButton(onPressed: _pickDate, icon: const Icon(Icons.calendar_today_outlined)),
+                    ]),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, _PurchaseExpiryResult(_expiry)),
+                child: Text(l10n.shoppingMoveToFridge),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => Navigator.pop(context, const _PurchaseExpiryResult(null)),
+                child: Text(l10n.shoppingExpirySkip),
               ),
             ],
           ),

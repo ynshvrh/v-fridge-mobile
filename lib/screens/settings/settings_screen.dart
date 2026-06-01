@@ -7,6 +7,7 @@ import '../../models/cuisines.dart';
 import '../../providers/locale_provider.dart';
 import '../../providers/providers.dart';
 import '../../providers/theme_provider.dart';
+import '../../theme/vf_colors.dart';
 import '../../widgets/staggered_entry.dart';
 import 'fridges_section.dart';
 
@@ -127,7 +128,7 @@ class _ProfileCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(auth.user?.username ?? '—', style: Theme.of(context).textTheme.titleMedium),
-                  Text(auth.user?.email ?? '—', style: TextStyle(color: Theme.of(context).colorScheme.outline)),
+                  Text(auth.user?.email ?? '—', style: TextStyle(color: context.vfColors.mutedForeground)),
                   if (auth.user != null) Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: Row(

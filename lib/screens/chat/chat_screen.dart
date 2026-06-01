@@ -62,6 +62,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final text = (overrideText ?? _input.text).trim();
     if (text.isEmpty || _sending) return;
     final rateLimitMessage = context.l10n.chatRateLimit;
+    final aiUnavailableMessage = context.l10n.chatAiUnavailable;
     if (overrideText == null) _input.clear();
     setState(() {
       _messages = [..._messages, ChatMessage(id: -1, role: 'user', content: text)];
@@ -78,6 +79,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       if (!mounted) return;
       if (e.status == 429) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(rateLimitMessage)));
+      } else if (e.code == 'AI_UNAVAILABLE' || e.status == 502) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(aiUnavailableMessage)));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
       }
