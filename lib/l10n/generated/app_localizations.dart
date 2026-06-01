@@ -536,6 +536,12 @@ abstract class AppLocalizations {
   /// **'Too many requests. Try again in a minute.'**
   String get chatRateLimit;
 
+  /// No description provided for @chatAiUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'AI chef is busy right now. Try again in a moment.'**
+  String get chatAiUnavailable;
+
   /// No description provided for @chatClearTitle.
   ///
   /// In en, this message translates to:
@@ -607,6 +613,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'\"{name}\" added to the fridge'**
   String shoppingAddedToFridge(String name);
+
+  /// No description provided for @shoppingExpiryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an expiry date?'**
+  String get shoppingExpiryTitle;
+
+  /// No description provided for @shoppingExpiryBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Set when \"{name}\" expires so your fridge stats and chef tips stay accurate. You can skip this.'**
+  String shoppingExpiryBody(String name);
+
+  /// No description provided for @shoppingExpirySkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip, no date'**
+  String get shoppingExpirySkip;
 
   /// No description provided for @shoppingAddSheetTitle.
   ///

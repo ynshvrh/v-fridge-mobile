@@ -293,6 +293,7 @@ class _MealCard extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final vf = context.vfColors;
     final hasDetails = (meal.description != null && meal.description!.isNotEmpty) ||
+        (meal.note != null && meal.note!.isNotEmpty) ||
         meal.steps.isNotEmpty ||
         meal.ingredients.isNotEmpty;
 
@@ -319,10 +320,6 @@ class _MealCard extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(meal.name, style: Theme.of(context).textTheme.titleMedium),
-              if (meal.note != null && meal.note!.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(meal.note!, style: TextStyle(fontStyle: FontStyle.italic, color: scheme.outline)),
-              ],
             ],
           ),
           trailing: Row(
@@ -364,6 +361,10 @@ class _MealCard extends StatelessWidget {
             if (meal.description != null && meal.description!.isNotEmpty) ...[
               const SizedBox(height: 4),
               Text(meal.description!, style: TextStyle(color: vf.mutedForeground)),
+            ],
+            if (meal.note != null && meal.note!.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(meal.note!, style: TextStyle(fontStyle: FontStyle.italic, color: vf.mutedForeground)),
             ],
             if (meal.steps.isNotEmpty) ...[
               const SizedBox(height: 16),

@@ -252,6 +252,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatRateLimit => 'Too many requests. Try again in a minute.';
 
   @override
+  String get chatAiUnavailable =>
+      'AI chef is busy right now. Try again in a moment.';
+
+  @override
   String get chatClearTitle => 'Clear chat history?';
 
   @override
@@ -288,6 +292,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String shoppingAddedToFridge(String name) {
     return '\"$name\" added to the fridge';
   }
+
+  @override
+  String get shoppingExpiryTitle => 'Add an expiry date?';
+
+  @override
+  String shoppingExpiryBody(String name) {
+    return 'Set when \"$name\" expires so your fridge stats and chef tips stay accurate. You can skip this.';
+  }
+
+  @override
+  String get shoppingExpirySkip => 'Skip, no date';
 
   @override
   String get shoppingAddSheetTitle => 'Add to shopping list';

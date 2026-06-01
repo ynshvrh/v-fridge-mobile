@@ -256,6 +256,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get chatRateLimit => 'Забагато запитів. Спробуйте за хвилину.';
 
   @override
+  String get chatAiUnavailable =>
+      'Шеф-кухар ШІ зараз зайнятий. Спробуйте за мить.';
+
+  @override
   String get chatClearTitle => 'Очистити історію чату?';
 
   @override
@@ -292,6 +296,17 @@ class AppLocalizationsUk extends AppLocalizations {
   String shoppingAddedToFridge(String name) {
     return '«$name» додано в холодильник';
   }
+
+  @override
+  String get shoppingExpiryTitle => 'Додати термін придатності?';
+
+  @override
+  String shoppingExpiryBody(String name) {
+    return 'Вкажіть, коли «$name» псується, щоб статистика холодильника й поради шефа були точними. Це можна пропустити.';
+  }
+
+  @override
+  String get shoppingExpirySkip => 'Пропустити, без дати';
 
   @override
   String get shoppingAddSheetTitle => 'Додати в список покупок';
