@@ -782,6 +782,24 @@ abstract class AppLocalizations {
   /// **'Sunday'**
   String get plannerDaySunday;
 
+  /// No description provided for @mealTypeBreakfast.
+  ///
+  /// In en, this message translates to:
+  /// **'Breakfast'**
+  String get mealTypeBreakfast;
+
+  /// No description provided for @mealTypeLunch.
+  ///
+  /// In en, this message translates to:
+  /// **'Lunch'**
+  String get mealTypeLunch;
+
+  /// No description provided for @mealTypeDinner.
+  ///
+  /// In en, this message translates to:
+  /// **'Dinner'**
+  String get mealTypeDinner;
+
   /// No description provided for @settingsTitle.
   ///
   /// In en, this message translates to:

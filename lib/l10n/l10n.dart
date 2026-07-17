@@ -103,3 +103,17 @@ String plannerDayLabel(AppLocalizations l10n, String day) {
       return day;
   }
 }
+
+/// Resolves a localized meal type name (breakfast, lunch, dinner).
+String mealTypeLabel(AppLocalizations l10n, String? type) {
+  switch (type?.toLowerCase()) {
+    case 'breakfast':
+      return l10n.mealTypeBreakfast;
+    case 'lunch':
+      return l10n.mealTypeLunch;
+    case 'dinner':
+      return l10n.mealTypeDinner;
+    default:
+      return type ?? '';
+  }
+}

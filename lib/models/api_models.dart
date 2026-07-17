@@ -174,6 +174,7 @@ class Meal {
   final String? note;
   final String? description;
   final List<String> steps;
+  final String? mealType;
 
   Meal({
     required this.name,
@@ -182,6 +183,7 @@ class Meal {
     this.note,
     this.description,
     this.steps = const [],
+    this.mealType,
   });
 
   factory Meal.fromJson(Map<String, dynamic> j) => Meal(
@@ -192,6 +194,7 @@ class Meal {
         note: j['note'] as String?,
         description: j['description'] as String?,
         steps: (j['steps'] as List?)?.cast<String>() ?? const [],
+        mealType: j['mealType'] as String?,
       );
 }
 

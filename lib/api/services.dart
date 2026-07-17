@@ -277,10 +277,10 @@ class PlannerService {
   /// day name (Monday..Friday). The server caches the result, so a repeat call
   /// for the same day returns instantly without spending tokens. Shares the chat
   /// rate-limit bucket, so callers should be ready for a 429.
-  Future<MealPlan> fetchRecipe(String day) async {
+  Future<MealPlan> fetchRecipe(String day, String mealType) async {
     final data = await _api.post<Map<String, dynamic>>(
       '/meal-plan/recipe',
-      body: {'day': day},
+      body: {'day': day, 'mealType': mealType},
     );
     return MealPlan.fromJson(data);
   }

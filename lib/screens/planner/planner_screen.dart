@@ -86,9 +86,8 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
   String? _error;
   // Day currently being regenerated (canonical English name), or null when idle.
   String? _regeneratingDay;
-  // Day whose recipe is currently being lazily fetched, or null when idle. Guards
-  // against duplicate in-flight fetches for the same day.
-  String? _loadingRecipeDay;
+  // Unique key (day-mealType) of the meal whose recipe is currently being lazily fetched, or null when idle.
+  String? _loadingRecipeMealKey;
 
   @override
   void initState() {
@@ -150,17 +149,18 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
     }
   }
 
-  /// Lazily pulls a single day's recipe (description + steps) the first time its
+  /// Lazily pulls a single meal's recipe (description + steps) the first time its
   /// card is expanded. Light plans ship meals with empty steps and a null
   /// description; this fills them in one meal at a time to stay within the token
   /// budget. The server caches the result, so a second expand never hits the
-  /// network. No-ops when that day is already being fetched.
-  Future<void> _fetchRecipe(String day) async {
-    if (_loadingRecipeDay == day) return; // de-dupe concurrent expands
+  /// network. No-ops when that meal is already being fetched.
+  Future<void> _fetchRecipe(String day, String mealType) async {
+    final key = '$day-$mealType';
+    if (_loadingRecipeMealKey == key) return; // de-dupe concurrent expands
     final l10n = context.l10n;
-    setState(() => _loadingRecipeDay = day);
+    setState(() => _loadingRecipeMealKey = key);
     try {
-      final updated = await ref.read(plannerServiceProvider).fetchRecipe(day);
+      final updated = await ref.read(plannerServiceProvider).fetchRecipe(day, mealType);
       if (mounted) setState(() => _plan = updated);
     } on ApiError catch (e) {
       if (mounted) {
@@ -168,7 +168,7 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
       }
     } finally {
-      if (mounted) setState(() => _loadingRecipeDay = null);
+      if (mounted) setState(() => _loadingRecipeMealKey = null);
     }
   }
 
@@ -185,7 +185,16 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
       }
     });
     final plan = _plan;
-    final meals = plan == null ? <Meal>[] : ([...plan.meals]..sort((a, b) => _dayOrder.indexOf(a.day).compareTo(_dayOrder.indexOf(b.day))));
+    final meals = plan == null
+        ? <Meal>[]
+        : ([...plan.meals]..sort((a, b) {
+            final dayDiff = _dayOrder.indexOf(a.day).compareTo(_dayOrder.indexOf(b.day));
+            if (dayDiff != 0) return dayDiff;
+            final typeA = a.mealType?.toLowerCase() ?? '';
+            final typeB = b.mealType?.toLowerCase() ?? '';
+            final mealTypeOrder = ['breakfast', 'lunch', 'dinner'];
+            return mealTypeOrder.indexOf(typeA).compareTo(mealTypeOrder.indexOf(typeB));
+          }));
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
@@ -218,9 +227,9 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
                     child: _MealCard(
                       meal: meals[idx],
                       regenerating: _regeneratingDay == meals[idx].day,
-                      loadingRecipe: _loadingRecipeDay == meals[idx].day,
+                      loadingRecipe: _loadingRecipeMealKey == '${meals[idx].day}-${meals[idx].mealType ?? ""}',
                       onRegenerate: () => _regenerateDay(meals[idx].day),
-                      onNeedRecipe: () => _fetchRecipe(meals[idx].day),
+                      onNeedRecipe: () => _fetchRecipe(meals[idx].day, meals[idx].mealType ?? ''),
                     ),
                   ),
                 if (plan.gapItems.isNotEmpty) ...[
@@ -315,7 +324,7 @@ class _MealCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                plannerDayLabel(l10n, meal.day).toUpperCase(),
+                '${plannerDayLabel(l10n, meal.day)}${meal.mealType != null ? " • ${mealTypeLabel(l10n, meal.mealType)}" : ""}'.toUpperCase(),
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(letterSpacing: 1.5, color: scheme.outline),
               ),
               const SizedBox(height: 4),

@@ -393,6 +393,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get plannerDaySunday => 'Sunday';
 
   @override
+  String get mealTypeBreakfast => 'Breakfast';
+
+  @override
+  String get mealTypeLunch => 'Lunch';
+
+  @override
+  String get mealTypeDinner => 'Dinner';
+
+  @override
   String get settingsTitle => 'Settings';
 
   @override

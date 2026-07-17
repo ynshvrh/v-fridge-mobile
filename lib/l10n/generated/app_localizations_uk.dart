@@ -399,6 +399,15 @@ class AppLocalizationsUk extends AppLocalizations {
   String get plannerDaySunday => 'Неділя';
 
   @override
+  String get mealTypeBreakfast => 'Сніданок';
+
+  @override
+  String get mealTypeLunch => 'Обід';
+
+  @override
+  String get mealTypeDinner => 'Вечеря';
+
+  @override
   String get settingsTitle => 'Налаштування';
 
   @override

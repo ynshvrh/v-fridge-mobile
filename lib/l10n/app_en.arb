@@ -138,6 +138,9 @@
   "plannerDayFriday": "Friday",
   "plannerDaySaturday": "Saturday",
   "plannerDaySunday": "Sunday",
+  "mealTypeBreakfast": "Breakfast",
+  "mealTypeLunch": "Lunch",
+  "mealTypeDinner": "Dinner",
 
   "settingsTitle": "Settings",
   "settingsAppearance": "Appearance",
