@@ -33,8 +33,6 @@ class _AddProductSheetState extends ConsumerState<AddProductSheet> {
   bool _saved = false;
   String? _error;
 
-  static const _units = ['pcs', 'kg', 'g', 'l', 'ml'];
-
   @override
   void initState() {
     super.initState();
@@ -48,7 +46,8 @@ class _AddProductSheetState extends ConsumerState<AddProductSheet> {
     _quantity = TextEditingController(text: initialQty);
     // Rebuild so the incomplete-data warning reflects the live quantity value.
     _quantity.addListener(_onFormChanged);
-    _unit = _units.contains(p?.unit) ? p!.unit : 'pcs';
+    final normalizedUnit = UnitStandards.normalize(p?.unit ?? 'pcs');
+    _unit = UnitStandards.canonicalUnits.contains(normalizedUnit) ? normalizedUnit : 'pcs';
     _category = Categories.slugs.contains(p?.category) ? p!.category : 'other';
     _expiry = p?.expiryDate;
   }
@@ -73,7 +72,8 @@ class _AddProductSheetState extends ConsumerState<AddProductSheet> {
     setState(() {
       _name.text = scanned.name;
       _quantity.text = scanned.quantity;
-      _unit = _units.contains(scanned.unit) ? scanned.unit : 'pcs';
+      final norm = UnitStandards.normalize(scanned.unit);
+      _unit = UnitStandards.canonicalUnits.contains(norm) ? norm : 'pcs';
       _category = Categories.slugs.contains(scanned.category) ? scanned.category : 'other';
     });
     if (mounted) {
@@ -106,6 +106,7 @@ class _AddProductSheetState extends ConsumerState<AddProductSheet> {
     try {
       final svc = ref.read(productsServiceProvider);
       final Product saved;
+      final normalizedUnit = UnitStandards.normalize(_unit);
       if (widget.isEdit) {
         // Only send fields that actually changed compared to the loaded product.
         final old = widget.existing!;
@@ -113,7 +114,7 @@ class _AddProductSheetState extends ConsumerState<AddProductSheet> {
           old.id,
           name: _name.text.trim() != old.name ? _name.text.trim() : null,
           quantity: qty != old.quantity ? qty : null,
-          unit: _unit != old.unit ? _unit : null,
+          unit: normalizedUnit != old.unit ? normalizedUnit : null,
           category: _category != old.category ? _category : null,
           expiryDate: _expiryChanged ? _expiry : null,
           clearExpiry: _expiryChanged && _expiry == null,
@@ -122,7 +123,7 @@ class _AddProductSheetState extends ConsumerState<AddProductSheet> {
         saved = await svc.create(
           name: _name.text.trim(),
           quantity: qty,
-          unit: _unit,
+          unit: normalizedUnit,
           expiryDate: _expiry,
           category: _category,
         );
@@ -157,6 +158,7 @@ class _AddProductSheetState extends ConsumerState<AddProductSheet> {
     final title = widget.isEdit ? l10n.addProductEditTitle : l10n.addProductTitle;
     final actionLabel = widget.isEdit ? l10n.actionSave : l10n.addProductActionAdd;
     final incomplete = _incompleteFields(l10n);
+    final unitOptions = UnitStandards.options(l10n.localeName);
     return Padding(
       padding: EdgeInsets.only(bottom: inset),
       child: SafeArea(
@@ -200,8 +202,10 @@ class _AddProductSheetState extends ConsumerState<AddProductSheet> {
                     child: DropdownButtonFormField<String>(
                       initialValue: _unit,
                       decoration: InputDecoration(labelText: l10n.addProductUnit),
-                      items: _units.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
-                      onChanged: (v) => setState(() => _unit = v ?? 'pcs'),
+                      items: unitOptions
+                          .map((opt) => DropdownMenuItem(value: opt.value, child: Text(opt.label)))
+                          .toList(),
+                      onChanged: (v) => setState(() => _unit = UnitStandards.normalize(v ?? 'pcs')),
                     ),
                   ),
                 ],

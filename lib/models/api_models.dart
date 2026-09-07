@@ -2,6 +2,8 @@
 /// Kept in sync with src/VFridge.Api/Contracts/* on the backend repo.
 library;
 
+import 'dart:convert';
+
 import 'package:intl/intl.dart';
 
 class ApiError implements Exception {
@@ -90,6 +92,12 @@ class Product {
     this.createdAt,
   });
 
+  bool get isPreparedMeal =>
+      category == 'prepared-meals' ||
+      unit.toLowerCase().contains('порц') ||
+      unit.toLowerCase() == 'servings' ||
+      (description != null && description!.contains('кКал'));
+
   factory Product.fromJson(Map<String, dynamic> j) => Product(
         id: j['id'] as int,
         name: j['name'] as String,
@@ -102,6 +110,7 @@ class Product {
         createdAt: j['createdAt'] != null ? DateTime.parse(j['createdAt'] as String) : null,
       );
 }
+
 
 class ChatMessage {
   final int id;
@@ -333,6 +342,7 @@ class Categories {
     'sauces',
     'frozen',
     'canned-prepared',
+    'prepared-meals',
     'other',
   ];
 
@@ -349,10 +359,131 @@ class Categories {
     'sauces': 'Sauces, oils & spices',
     'frozen': 'Frozen',
     'canned-prepared': 'Canned & ready-to-eat',
+    'prepared-meals': 'Prepared meals',
     'other': 'Other',
   };
 
   static String label(String slug) => _labels[slug] ?? 'Other';
 }
 
+class ConsumeProductResult {
+  final bool success;
+  final String message;
+  final double remainingQuantity;
+  final bool deleted;
+
+  ConsumeProductResult({
+    required this.success,
+    required this.message,
+    required this.remainingQuantity,
+    required this.deleted,
+  });
+
+  factory ConsumeProductResult.fromJson(Map<String, dynamic> j) => ConsumeProductResult(
+        success: j['success'] as bool? ?? true,
+        message: j['message'] as String? ?? '',
+        remainingQuantity: (j['remainingQuantity'] as num?)?.toDouble() ?? 0.0,
+        deleted: j['deleted'] as bool? ?? false,
+      );
+}
+
+class ParsedChefResponse {
+  final String message;
+  final ParsedRecipe? recipe;
+  final List<ParsedShoppingItem> suggestedShoppingItems;
+
+  ParsedChefResponse({
+    required this.message,
+    this.recipe,
+    this.suggestedShoppingItems = const [],
+  });
+
+  factory ParsedChefResponse.fromRaw(String content) {
+    final trimmed = content.trim();
+    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+      try {
+        final j = jsonDecode(trimmed) as Map<String, dynamic>;
+        ParsedRecipe? recipe;
+        if (j['recipe'] is Map<String, dynamic>) {
+          recipe = ParsedRecipe.fromJson(j['recipe'] as Map<String, dynamic>);
+        }
+        final shopping = <ParsedShoppingItem>[];
+        if (j['suggestedShoppingItems'] is List) {
+          for (final item in j['suggestedShoppingItems'] as List) {
+            if (item is Map<String, dynamic>) {
+              shopping.add(ParsedShoppingItem.fromJson(item));
+            }
+          }
+        }
+        return ParsedChefResponse(
+          message: (j['message'] as String?) ?? (recipe != null ? '' : trimmed),
+          recipe: recipe,
+          suggestedShoppingItems: shopping,
+        );
+      } catch (_) {
+        // Fall back to plain text
+      }
+    }
+    return ParsedChefResponse(message: content);
+  }
+}
+
+class ParsedRecipe {
+  final String name;
+  final String description;
+  final List<String> ingredients;
+  final List<String> steps;
+  final int calories;
+  final int protein;
+  final int fat;
+  final int carbs;
+  final int portions;
+
+  ParsedRecipe({
+    required this.name,
+    required this.description,
+    required this.ingredients,
+    required this.steps,
+    required this.calories,
+    required this.protein,
+    required this.fat,
+    required this.carbs,
+    required this.portions,
+  });
+
+  factory ParsedRecipe.fromJson(Map<String, dynamic> j) => ParsedRecipe(
+        name: (j['name'] ?? j['title'] ?? '') as String,
+        description: (j['description'] ?? '') as String,
+        ingredients: (j['ingredients'] as List?)?.map((i) => i.toString()).toList() ?? const [],
+        steps: (j['steps'] as List?)?.map((s) => s.toString()).toList() ?? const [],
+        calories: (j['calories'] as num?)?.toInt() ?? 0,
+        protein: (j['protein'] as num?)?.toInt() ?? 0,
+        fat: (j['fat'] as num?)?.toInt() ?? 0,
+        carbs: (j['carbs'] as num?)?.toInt() ?? 0,
+        portions: (j['portions'] as num?)?.toInt() ?? 2,
+      );
+}
+
+class ParsedShoppingItem {
+  final String name;
+  final double quantity;
+  final String unit;
+  final String category;
+
+  ParsedShoppingItem({
+    required this.name,
+    this.quantity = 1,
+    this.unit = 'pcs',
+    this.category = 'other',
+  });
+
+  factory ParsedShoppingItem.fromJson(Map<String, dynamic> j) => ParsedShoppingItem(
+        name: (j['name'] ?? '') as String,
+        quantity: (j['quantity'] as num?)?.toDouble() ?? 1.0,
+        unit: (j['unit'] ?? 'pcs') as String,
+        category: (j['category'] ?? 'other') as String,
+      );
+}
+
 String formatDate(DateTime d) => DateFormat('yyyy-MM-dd').format(d);
+

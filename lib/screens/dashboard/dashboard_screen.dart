@@ -73,10 +73,31 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     }
   }
 
+  Future<void> _consumePortion(Product p) async {
+    final l10n = context.l10n;
+    try {
+      final res = await ref.read(productsServiceProvider).consume(p.id, portions: 1.0);
+      if (mounted) _reload();
+      if (mounted) {
+        final unitStr = UnitStandards.format('servings', l10n.localeName);
+        final msg = res.deleted
+            ? l10n.dashboardConsumeLogged(p.name)
+            : '${p.name}: ${res.remainingQuantity.toStringAsFixed(res.remainingQuantity % 1 == 0 ? 0 : 1)} $unitStr';
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      }
+    } on ApiError catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+    }
+  }
+
   Future<void> _consume(Product p) async {
     final l10n = context.l10n;
     try {
-      await ref.read(productsServiceProvider).patch(p.id, quantity: 0);
+      if (p.isPreparedMeal) {
+        await ref.read(productsServiceProvider).consume(p.id, portions: p.quantity);
+      } else {
+        await ref.read(productsServiceProvider).patch(p.id, quantity: 0);
+      }
       if (mounted) _reload();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.dashboardConsumeLogged(p.name))));
@@ -146,6 +167,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               onEdit: () => _edit(p),
                               onDelete: () => _delete(p),
                               onConsume: () => _consume(p),
+                              onConsumePortion: p.isPreparedMeal ? () => _consumePortion(p) : null,
                             ),
                           ),
                         ),
@@ -174,17 +196,20 @@ class _ProductTile extends StatelessWidget {
     required this.onEdit,
     required this.onDelete,
     required this.onConsume,
+    this.onConsumePortion,
   });
   final Product product;
   final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
   final VoidCallback onConsume;
+  final VoidCallback? onConsumePortion;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final freshness = _freshness(l10n, product.expiryDate);
+    final displayUnit = UnitStandards.format(product.unit, l10n.localeName);
     return Card(
       child: ListTile(
         onTap: onTap,
@@ -192,7 +217,25 @@ class _ProductTile extends StatelessWidget {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('${product.quantity.toStringAsFixed(product.quantity % 1 == 0 ? 0 : 1)} ${product.unit} · ${categoryLabel(l10n, product.category)}'),
+            Text('${product.quantity.toStringAsFixed(product.quantity % 1 == 0 ? 0 : 1)} $displayUnit · ${categoryLabel(l10n, product.category)}'),
+            if (product.isPreparedMeal) ...[
+              const SizedBox(height: 2),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  categoryLabel(l10n, 'prepared-meals'),
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 4),
             Row(
               children: [
@@ -208,8 +251,17 @@ class _ProductTile extends StatelessWidget {
             if (v == 'edit') onEdit();
             if (v == 'delete') onDelete();
             if (v == 'consume') onConsume();
+            if (v == 'consume_portion') onConsumePortion?.call();
           },
           itemBuilder: (_) => [
+            if (product.isPreparedMeal)
+              PopupMenuItem(
+                value: 'consume_portion',
+                child: ListTile(
+                  leading: const Icon(Icons.restaurant_outlined),
+                  title: Text(l10n.localeName.startsWith('uk') ? 'З\'їсти 1 порцію' : 'Eat 1 serving'),
+                ),
+              ),
             PopupMenuItem(value: 'edit', child: ListTile(leading: const Icon(Icons.edit_outlined), title: Text(l10n.actionEdit))),
             PopupMenuItem(value: 'consume', child: ListTile(leading: const Icon(Icons.check_circle_outline), title: Text(l10n.productActionMarkFinished))),
             PopupMenuItem(value: 'delete', child: ListTile(leading: const Icon(Icons.delete_outline), title: Text(l10n.actionDelete))),

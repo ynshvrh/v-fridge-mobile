@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'generated/app_localizations.dart';
 
 export 'generated/app_localizations.dart' show AppLocalizations;
+export '../models/unit_standards.dart';
 
 /// Locales the app supports as user-visible UI languages.
 /// Keep the codes in sync with `lib/l10n/app_*.arb` and the backend's
@@ -45,6 +46,8 @@ String categoryLabel(AppLocalizations l10n, String slug) {
       return l10n.categoryFrozen;
     case 'canned-prepared':
       return l10n.categoryCannedPrepared;
+    case 'prepared-meals':
+      return l10n.localeName.startsWith('uk') ? 'Готові страви' : 'Prepared meals';
     default:
       return l10n.categoryOther;
   }

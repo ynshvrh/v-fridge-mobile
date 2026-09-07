@@ -334,6 +334,8 @@ class _Bubble extends StatelessWidget {
     final isAi = message.role == 'assistant' || message.role == 'model';
     final scheme = Theme.of(context).colorScheme;
     final vf = context.vfColors;
+    final parsed = isAi ? ParsedChefResponse.fromRaw(message.content) : null;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -346,21 +348,23 @@ class _Bubble extends StatelessWidget {
           ],
           Flexible(
             child: Container(
-              constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
+              constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.85),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
                 color: isAi ? vf.zephir : scheme.primary,
                 borderRadius: VfRadius.brXl,
                 border: Border.all(color: isAi ? scheme.outline : Colors.transparent),
               ),
-              child: Text(
-                message.content,
-                style: TextStyle(
-                  color: isAi ? scheme.onSurface : scheme.onPrimary,
-                  fontWeight: FontWeight.w500,
-                  height: 1.4,
-                ),
-              ),
+              child: isAi && parsed != null
+                  ? _AiContent(parsed: parsed)
+                  : Text(
+                      message.content,
+                      style: TextStyle(
+                        color: scheme.onPrimary,
+                        fontWeight: FontWeight.w500,
+                        height: 1.4,
+                      ),
+                    ),
             ),
           ),
           if (!isAi) ...[
@@ -387,6 +391,326 @@ class _Bubble extends StatelessWidget {
           duration: isAi ? 320.ms : 240.ms,
           curve: isAi ? Curves.easeOutBack : Curves.easeOut,
         );
+  }
+}
+
+class _AiContent extends StatelessWidget {
+  const _AiContent({required this.parsed});
+  final ParsedChefResponse parsed;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (parsed.message.isNotEmpty)
+          Text(
+            parsed.message,
+            style: TextStyle(
+              color: scheme.onSurface,
+              fontWeight: FontWeight.w500,
+              height: 1.4,
+            ),
+          ),
+        if (parsed.recipe != null) ...[
+          if (parsed.message.isNotEmpty) const SizedBox(height: 12),
+          _RecipeCard(recipe: parsed.recipe!),
+        ],
+        if (parsed.suggestedShoppingItems.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          _SuggestedShoppingView(items: parsed.suggestedShoppingItems),
+        ],
+      ],
+    );
+  }
+}
+
+class _RecipeCard extends ConsumerStatefulWidget {
+  const _RecipeCard({required this.recipe});
+  final ParsedRecipe recipe;
+
+  @override
+  ConsumerState<_RecipeCard> createState() => _RecipeCardState();
+}
+
+class _RecipeCardState extends ConsumerState<_RecipeCard> {
+  bool _cooking = false;
+  bool _cooked = false;
+
+  Future<void> _cook() async {
+    final l10n = context.l10n;
+    final isUk = l10n.localeName.startsWith('uk');
+    setState(() => _cooking = true);
+    try {
+      await ref.read(productsServiceProvider).cook(
+        name: widget.recipe.name,
+        description: widget.recipe.description,
+        portions: widget.recipe.portions > 0 ? widget.recipe.portions : 2,
+        ingredients: widget.recipe.ingredients,
+        caloriesPerPortion: widget.recipe.calories,
+        proteinPerPortion: widget.recipe.protein.toDouble(),
+        fatPerPortion: widget.recipe.fat.toDouble(),
+        carbsPerPortion: widget.recipe.carbs.toDouble(),
+      );
+      if (!mounted) return;
+      setState(() {
+        _cooking = false;
+        _cooked = true;
+      });
+      HapticFeedback.mediumImpact();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isUk
+                ? 'Страву "${widget.recipe.name}" приготовано та збережено у холодильник!'
+                : 'Cooked and saved "${widget.recipe.name}" to fridge!',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _cooking = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error cooking recipe: $e')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final vf = context.vfColors;
+    final l10n = context.l10n;
+    final isUk = l10n.localeName.startsWith('uk');
+    final recipe = widget.recipe;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: VfRadius.brLg,
+        border: Border.all(color: scheme.outline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.restaurant, size: 18, color: scheme.primary),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  recipe.name,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+          if (recipe.description.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              recipe.description,
+              style: TextStyle(fontSize: 12, color: vf.mutedForeground),
+            ),
+          ],
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            runSpacing: 4,
+            children: [
+              if (recipe.calories > 0)
+                _NutrientPill(
+                  label: '${recipe.calories} ${isUk ? "ккал" : "kcal"}',
+                  color: Colors.amber.shade800,
+                ),
+              if (recipe.protein > 0)
+                _NutrientPill(
+                  label: '${recipe.protein}g ${isUk ? "Б" : "P"}',
+                  color: Colors.red.shade700,
+                ),
+              if (recipe.fat > 0)
+                _NutrientPill(
+                  label: '${recipe.fat}g ${isUk ? "Ж" : "F"}',
+                  color: Colors.orange.shade700,
+                ),
+              if (recipe.carbs > 0)
+                _NutrientPill(
+                  label: '${recipe.carbs}g ${isUk ? "В" : "C"}',
+                  color: Colors.blue.shade700,
+                ),
+              if (recipe.portions > 0)
+                _NutrientPill(
+                  label: '${recipe.portions} ${UnitStandards.format("servings", l10n.localeName)}',
+                  color: Colors.teal.shade700,
+                ),
+            ],
+          ),
+          if (recipe.ingredients.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text(
+              isUk ? 'Інгредієнти:' : 'Ingredients:',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            ),
+            const SizedBox(height: 4),
+            ...recipe.ingredients.map(
+              (ing) => Padding(
+                padding: const EdgeInsets.only(left: 4, bottom: 2),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('• ', style: TextStyle(color: scheme.primary, fontWeight: FontWeight.bold)),
+                    Expanded(child: Text(ing, style: const TextStyle(fontSize: 12))),
+                  ],
+                ),
+              ),
+            ),
+          ],
+          if (recipe.steps.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text(
+              isUk ? 'Приготування:' : 'Steps:',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            ),
+            const SizedBox(height: 4),
+            ...recipe.steps.asMap().entries.map(
+              (entry) => Padding(
+                padding: const EdgeInsets.only(left: 4, bottom: 3),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('${entry.key + 1}. ', style: TextStyle(color: scheme.primary, fontWeight: FontWeight.bold, fontSize: 12)),
+                    Expanded(child: Text(entry.value, style: const TextStyle(fontSize: 12))),
+                  ],
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.tonalIcon(
+              onPressed: (_cooking || _cooked) ? null : _cook,
+              icon: _cooked
+                  ? const Icon(Icons.check, size: 16)
+                  : _cooking
+                      ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Icon(Icons.soup_kitchen_outlined, size: 16),
+              label: Text(
+                _cooked
+                    ? (isUk ? 'Приготовано' : 'Cooked')
+                    : _cooking
+                        ? (isUk ? 'Готуємо...' : 'Cooking...')
+                        : (isUk ? 'Приготувати та зберегти' : 'Cook & Save to Fridge'),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NutrientPill extends StatelessWidget {
+  const _NutrientPill({required this.label, required this.color});
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color),
+      ),
+    );
+  }
+}
+
+class _SuggestedShoppingView extends ConsumerStatefulWidget {
+  const _SuggestedShoppingView({required this.items});
+  final List<ParsedShoppingItem> items;
+
+  @override
+  ConsumerState<_SuggestedShoppingView> createState() => _SuggestedShoppingViewState();
+}
+
+class _SuggestedShoppingViewState extends ConsumerState<_SuggestedShoppingView> {
+  final Set<String> _added = {};
+
+  Future<void> _addItem(ParsedShoppingItem item) async {
+    final l10n = context.l10n;
+    final isUk = l10n.localeName.startsWith('uk');
+    try {
+      await ref.read(shoppingServiceProvider).create(
+        name: item.name,
+        quantity: item.quantity,
+        unit: item.unit,
+        category: item.category,
+      );
+      if (!mounted) return;
+      setState(() => _added.add(item.name));
+      HapticFeedback.lightImpact();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isUk
+                ? 'Додано "${item.name}" до списку покупок'
+                : 'Added "${item.name}" to shopping list',
+          ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error adding item: $e')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final isUk = l10n.localeName.startsWith('uk');
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          isUk ? 'Додати відсутні інгредієнти до списку:' : 'Add missing ingredients to shopping list:',
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+        ),
+        const SizedBox(height: 6),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: widget.items.map((item) {
+            final isAdded = _added.contains(item.name);
+            final unitStr = UnitStandards.format(item.unit, l10n.localeName);
+            final qtyStr = '${item.quantity.toStringAsFixed(item.quantity % 1 == 0 ? 0 : 1)} $unitStr';
+            return ActionChip(
+              avatar: Icon(
+                isAdded ? Icons.check : Icons.add,
+                size: 14,
+              ),
+              label: Text('${item.name} ($qtyStr)', style: const TextStyle(fontSize: 11)),
+              onPressed: isAdded ? null : () => _addItem(item),
+            );
+          }).toList(),
+        ),
+      ],
+    );
   }
 }
 

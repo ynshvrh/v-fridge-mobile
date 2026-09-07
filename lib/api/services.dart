@@ -154,6 +154,53 @@ class ProductsService {
 
   Future<void> delete(int id) => _api.delete('/products/$id');
 
+  /// Consumes a portion of a product / prepared meal and logs to nutrition diary.
+  Future<ConsumeProductResult> consume(
+    int id, {
+    double portions = 1.0,
+    String mealType = 'lunch',
+  }) async {
+    final data = await _api.post<Map<String, dynamic>>(
+      '/products/$id/consume',
+      body: {
+        'portions': portions,
+        'mealType': mealType,
+      },
+    );
+    return ConsumeProductResult.fromJson(data);
+  }
+
+  /// Cooks a recipe: deducts raw ingredients from the fridge and creates a prepared meal.
+  Future<Map<String, dynamic>> cook({
+    required String name,
+    String? description,
+    required int portions,
+    List<String>? ingredients,
+    int? caloriesPerPortion,
+    double? proteinPerPortion,
+    double? fatPerPortion,
+    double? carbsPerPortion,
+    int? expiryDays = 3,
+    bool ignoreOptionalMissing = true,
+  }) async {
+    final data = await _api.post<Map<String, dynamic>>(
+      '/products/cook',
+      body: {
+        'name': name,
+        'description': ?description,
+        'portions': portions,
+        'ingredients': ?ingredients,
+        'caloriesPerPortion': ?caloriesPerPortion,
+        'proteinPerPortion': ?proteinPerPortion,
+        'fatPerPortion': ?fatPerPortion,
+        'carbsPerPortion': ?carbsPerPortion,
+        'expiryDays': ?expiryDays,
+        'ignoreOptionalMissing': ignoreOptionalMissing,
+      },
+    );
+    return data;
+  }
+
   /// Bulk-deletes every product in the active fridge. Each row writes a consumption_log entry.
   Future<int> deleteAll() async {
     final data = await _api.delete<Map<String, dynamic>>('/products');

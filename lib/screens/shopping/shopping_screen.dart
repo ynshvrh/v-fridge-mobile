@@ -444,9 +444,11 @@ class _Tile extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final vf = context.vfColors;
     final visual = categoryVisual(context, item.category);
-
+    final formattedUnit = (item.unit ?? '').isNotEmpty
+        ? UnitStandards.format(item.unit, l10n.localeName)
+        : '';
     final qtyText = item.quantity != null
-        ? '${item.quantity!.toStringAsFixed(item.quantity! % 1 == 0 ? 0 : 1)}${(item.unit ?? '').isNotEmpty ? ' ${item.unit}' : ''}'
+        ? '${item.quantity!.toStringAsFixed(item.quantity! % 1 == 0 ? 0 : 1)}${formattedUnit.isNotEmpty ? ' $formattedUnit' : ''}'
         : null;
 
     return Padding(
@@ -626,8 +628,6 @@ class _AddShoppingItemSheetState extends ConsumerState<_AddShoppingItemSheet> {
   bool _saving = false;
   String? _error;
 
-  static const _units = ['pcs', 'kg', 'g', 'l', 'ml'];
-
   @override
   void dispose() {
     _name.dispose();
@@ -640,10 +640,11 @@ class _AddShoppingItemSheetState extends ConsumerState<_AddShoppingItemSheet> {
     setState(() { _saving = true; _error = null; });
     try {
       final qty = double.tryParse(_quantity.text.replaceAll(',', '.'));
+      final normalizedUnit = UnitStandards.normalize(_unit);
       final created = await ref.read(shoppingServiceProvider).create(
             name: _name.text.trim(),
             quantity: qty,
-            unit: _unit,
+            unit: normalizedUnit,
             category: _category,
           );
       if (mounted) Navigator.pop(context, created);
@@ -658,6 +659,7 @@ class _AddShoppingItemSheetState extends ConsumerState<_AddShoppingItemSheet> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final inset = MediaQuery.of(context).viewInsets.bottom;
+    final unitOptions = UnitStandards.options(l10n.localeName);
     return Padding(
       padding: EdgeInsets.only(bottom: inset),
       child: SafeArea(
@@ -679,8 +681,8 @@ class _AddShoppingItemSheetState extends ConsumerState<_AddShoppingItemSheet> {
                   Expanded(child: DropdownButtonFormField<String>(
                     initialValue: _unit,
                     decoration: InputDecoration(labelText: l10n.addProductUnit),
-                    items: _units.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
-                    onChanged: (v) => setState(() => _unit = v ?? 'pcs'),
+                    items: unitOptions.map((opt) => DropdownMenuItem(value: opt.value, child: Text(opt.label))).toList(),
+                    onChanged: (v) => setState(() => _unit = UnitStandards.normalize(v ?? 'pcs')),
                   )),
                 ],
               ),
